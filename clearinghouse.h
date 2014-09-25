@@ -32,6 +32,11 @@ namespace Direction {
 
 namespace State {
     enum state{low, high};
+	
+    inline const char* text(state s) {
+      const char* res[3] = {(s == low) ? "lo" : "hi"};
+      return res[0];
+    }
 }
 
 
@@ -321,7 +326,31 @@ public:
 	   Serial.println(pp);
    }
 };
-}
+
+//*******************************************************************
+//*                         LED
+//* Led class allows me to declare an LED attached to the Arduino
+//* as an actuator that can you can push_back into a vector.
+//*******************************************************************
+
+struct Led {
+    const char* n;      //name
+    int p;              //pin the LED is attached to
+    State::state st;    //state of the LED either 'high' or 'low'
+    
+    Led(char* name, int pin, State::state high_or_low = State::low) 
+        :n(name), p(pin), st(high_or_low)
+    {
+        pinMode(p, OUTPUT);
+    }
+    
+    int pin() {return p;}
+    
+    State::state state() { return st; }
+    void set_state( State::state cmd_state) { st = cmd_state; }
+};
+
+} //close namespace gw
 
 #endif
 
