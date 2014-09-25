@@ -1,32 +1,43 @@
-#ifndef HEADING_MSG_H
-#define HEADING_MSG_H SEP_2014
+#ifndef BUMPER_H
+#define BUMPER_H SEP_2014
 
 #include <arduino.h>
 #include <clearinghouse.h>
 
+
 //************************************************************************
-//*                         HEADING MESSAGE
+//*                         BUMPER MESSAGE
 //************************************************************************
+
 #define INCLUDE_PRINT 1
 
 using namespace gw;
 
-struct Heading_msg : public Message {
+struct Bumper_msg : public Message {
 	// Data available from base class
 	//      const char* name()
 	//      int id()
-
-	int heading;
-
-	//Minimal constructor
-	Heading_msg() : Message("heading"), heading(0) {}
-
+	
+	bool pressed;
+	const char* bumped;
+	const char* clear;
+    
+    //minimal constructor
+    Bumper_msg() : Message("bumper"), 
+		pressed(false),
+		bumped("bumped"),
+		clear("clear") {}
+	
 	//REQUIRED VIRTUAL VOID FROM BASE
 	void update(Message* msg) {
-		Heading_msg* ptr = static_cast<Heading_msg*>(msg);
-		heading = ptr->heading;
+		Bumper_msg* ptr = static_cast<Bumper_msg*>(msg);
+		pressed = ptr->pressed;
 	}
-
+	
+	const char* text(bool val) {
+		return (val == true) ? bumped : clear;
+	}
+	
 	#if INCLUDE_PRINT == 1
 	//print
 	void print() {
@@ -35,9 +46,10 @@ struct Heading_msg : public Message {
 		Serial.print(F("\tname: "));
 		Serial.print(name());
 		Serial.print(F("\tval: "));
-		Serial.println(heading);
+		Serial.println(text(pressed));
 	}
 	#endif
+		
 };
 
 #endif

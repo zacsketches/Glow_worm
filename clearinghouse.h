@@ -96,6 +96,8 @@ public:
 		Serial.println("\tcustom print note implemented for this node");
     };
 	
+	virtual void begin() = 0;
+	
 private:
 	int node_id;
 	const char* n; 

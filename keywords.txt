@@ -3,7 +3,6 @@ State	KEYWORD1
 Message	KEYWORD1
 Node	KEYWORD1
 Clearinghouse	KEYWORD1
-clearinghouse	KEYWORD1
 Publisher	KEYWORD1
 Subscriber	KEYWORD1
 Motor_state	KEYWORD1
@@ -14,3 +13,4 @@ node_count	KEYWORD2
 
 Heading_msg	KEYWORD1
 Cmd_velocity_msg	KEYWORD1
+Bumper_msg	KEYWORD1
