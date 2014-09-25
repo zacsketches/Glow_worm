@@ -42,6 +42,5 @@ struct Cmd_velocity_msg : public Message {
     }
 	#endif
 };
-
 #endif
-
+ 
