@@ -6,6 +6,7 @@
 
 #define DEBUG_DRIVE       0
 #define DEBUG_MOTOR_STATE 0
+#define DEBUG_SUBSCRIBER  0
 
 /*
  * Clearinghouse is the heart of a publish and suscribe architecture for the Arduino
@@ -14,15 +15,14 @@
  *
 */
 
-
-
 //************************************************************************
 //*                         Global Namespace enums
 //************************************************************************
 
 
 namespace Direction {
-    enum dir {fwd, back};
+    //Used to define motor direction
+	enum dir {fwd, back};
 	
     inline const char* text(dir d) {
       const char* res[5] = {(d == fwd) ? "frwd" : "back"};
@@ -31,12 +31,36 @@ namespace Direction {
 }
 
 namespace State {
-    enum state{low, high};
+	//Used to define LED state
+    enum state{off = 0, on = 1};
 	
     inline const char* text(state s) {
-      const char* res[3] = {(s == low) ? "lo" : "hi"};
+      const char* res[4] = {(s == off) ? "off" : "on "};
       return res[0];
     }
+}
+
+namespace LOB {		//Navy navigational reference to a line of bearing
+	//Used to define whether a scan point is clear or obstructed
+	enum lob{clear, obstructed};
+	
+    inline const char* const text(lob s) {
+      const char* res[4] = {(s == clear) ? "clr" : "obs"};
+      return res[0];
+    }
+}
+
+namespace Port {
+	//Used to define the port that an LED is connected to on the I2C expander
+	enum port{p0=0x01, 
+	          p1=0x02, 
+			  p2=0x04, 
+			  p3=0x08, 
+			  p4=0x10, 
+			  p5=0x20, 
+			  p6=0x40, 
+			  p7=0x80, 
+			  error};
 }
 
 
@@ -222,7 +246,15 @@ public:
 		// I need to call the update method on the local message
 		// using the data in the clearinghouse message
 		const char* local_name = nodes_msg.name();
+#if DEBUG_SUBSCRIBER == 1
+		Serial.print("From Susciber: local_name is: ");
+		Serial.println(local_name);
+#endif
 		Message* store_msg_ptr = ch->get_ptr(local_name);
+#if DEBUG_SUBSCRIBER == 1
+		Serial.print("From Susciber: ch msg node id is: ");
+		Serial.println(store_msg_ptr->id());
+#endif
 		nodes_msg.update(store_msg_ptr); 
 	}
 	
@@ -333,21 +365,54 @@ public:
 //* as an actuator that can you can push_back into a vector.
 //*******************************************************************
 
-struct Led {
+class Led {
     const char* n;      //name
     int p;              //pin the LED is attached to
-    State::state st;    //state of the LED either 'high' or 'low'
+    State::state st;    //state of the LED either 'off' or 'on'
+	bool i2c;
     
-    Led(char* name, int pin, State::state high_or_low = State::low) 
-        :n(name), p(pin), st(high_or_low)
+public:
+    //Constructor for LED's attached directly to I/O pins
+	Led(const char* name, int pin, State::state s = State::off) 
+        :n(name), p(pin), st(s)
     {
         pinMode(p, OUTPUT);
+		i2c = false;
     }
+	
+	//Constructor for LED's attached via an I2C expander
+	Led(const char* name, Port::port pt, State::state s = State::off)
+		:n(name), p(pt), st(s)
+	{
+		i2c = true;
+	}
     
+	const char* name() {return n;}
     int pin() {return p;}
+
+	Port::port port() {
+		if(i2c) return (Port::port)p;
+		else return Port::error;
+	}
     
     State::state state() { return st; }
     void set_state( State::state cmd_state) { st = cmd_state; }
+
+	void print() {
+		if(i2c) 
+			Serial.print(F("I2C "));
+		Serial.print(F("Led"));
+		if(i2c) {
+			Serial.print(F(" connected on port: 0x"));
+			Serial.print(port(), HEX);
+		}
+		else {
+			Serial.print(F(" connected on pin: "));
+			Serial.print(pin());			
+		}
+		Serial.print(F(" state: "));
+		Serial.println(text(state()));
+	}
 };
 
 } //close namespace gw
