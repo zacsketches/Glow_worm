@@ -1,3 +1,4 @@
+#include <Pair.h>
 #include <Vector.h>
 #include <clearinghouse.h>
 #include <messages/bumper.h>

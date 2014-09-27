@@ -7,6 +7,7 @@
 #include <Wire.h>
 
 #include <Vector.h>
+#include <Pair.h>
 #include <clearinghouse.h>
 #include <messages/sensor_state.h>
 #include <Light_plant.h>

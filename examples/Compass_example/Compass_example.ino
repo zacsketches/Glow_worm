@@ -19,6 +19,7 @@
 #include <Wire.h>
 #include <Filter.h>
 #include <Vector.h>
+#include <Pair.h>
 #include <clearinghouse.h>
 #include <compass.h>
 #include <messages/heading.h>

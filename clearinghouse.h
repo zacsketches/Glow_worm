@@ -3,6 +3,7 @@
 
 #include <arduino.h>
 #include <Vector.h>
+#include <Pair.h>
 
 #define DEBUG_DRIVE       0
 #define DEBUG_MOTOR_STATE 0
@@ -414,6 +415,25 @@ public:
 		Serial.println(text(state()));
 	}
 };
+
+//************************************************************************
+//*                         SCAN POINT
+//************************************************************************
+class Scan_pt : public Pair<int, int> {
+public:
+	Scan_pt(int heading, int range) : Pair<int, int>(heading, range) {}
+	
+	Scan_pt() : Pair<int, int>(0,0) {}
+	
+	int heading() {return first(); }
+	int range() {return second(); }
+};
+
+inline const char* text(const Scan_pt& sp) {
+	char buf[10];
+	sprintf(buf, "%03d:%03d", sp.first(), sp.second() );
+	return buf;
+}
 
 } //close namespace gw
 
