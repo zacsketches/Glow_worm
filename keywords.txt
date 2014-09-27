@@ -10,12 +10,14 @@ Motor_state	KEYWORD1
 Motor	KEYWORD1
 Led	KEYWORD1
 gw	KEYWORD1
+
 msg_count	KEYWORD2
 node_count	KEYWORD2
 register_msg	KEYWORD2
-
+list    KEYWORD2
 
 Heading_msg	KEYWORD1
 Cmd_velocity_msg	KEYWORD1
 Bumper_msg	KEYWORD1
 Sensor_state_msg	KEYWORD1
+Five_pt_scan_msg    KEYWORD1

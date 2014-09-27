@@ -106,9 +106,7 @@ struct Message {
 //*                         NODE
 //************************************************************************
 class Node {
-/*
-	TODO think about public/private with Node
-*/
+
 public:
 	static int node_count;
 	
@@ -425,15 +423,31 @@ public:
 	
 	Scan_pt() : Pair<int, int>(0,0) {}
 	
-	int heading() {return first(); }
-	int range() {return second(); }
+	const int heading() const {return first(); }
+	const int range() const {return second(); }
+	
 };
+
+inline bool operator==(const Scan_pt& a, const Scan_pt& b ){
+    bool res = false;
+    if ( (a.heading() == b.heading()) && (a.range() == b. range()) ) {
+        res = true;
+    }
+    return res;
+}
+
+inline bool operator!=(const Scan_pt& a, const Scan_pt& b ){
+    return !(a==b);
+}
 
 inline const char* text(const Scan_pt& sp) {
 	char buf[10];
 	sprintf(buf, "%03d:%03d", sp.first(), sp.second() );
 	return buf;
 }
+
+//Define an error point to check for return values of Scan points out of range
+const Scan_pt ERROR_PT(999,999);
 
 } //close namespace gw
 

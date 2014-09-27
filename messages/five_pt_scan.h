@@ -21,11 +21,11 @@ struct Five_pt_scan_msg : public Message {
 	
 //    typedef Pair<int, int> pair;	//<heading, range>
 	
-	Scan_pt far_lt;
-	Scan_pt near_lt;
-	Scan_pt mid;
-	Scan_pt near_rt;
-	Scan_pt far_rt;
+	Scan_pt p4;
+	Scan_pt p2;
+	Scan_pt p0;
+	Scan_pt p1;
+	Scan_pt p3;
 	
             
     //minimal constructor
@@ -34,25 +34,25 @@ struct Five_pt_scan_msg : public Message {
 	//REQUIRED VIRTUAL VOID FROM BASE
 	void update(Message* msg) {
 		Five_pt_scan_msg* ptr = static_cast<Five_pt_scan_msg*>(msg);
-	    far_lt = ptr->far_lt;
-	    near_lt = ptr->near_lt;
-	    mid = ptr->mid;
-	    near_rt = ptr->near_rt;
-	    far_rt = ptr->far_rt;
+	    p4 = ptr->p4;
+	    p2 = ptr->p2;
+	    p0 = ptr->p0;
+	    p1 = ptr->p1;
+	    p3 = ptr->p3;
 	}	
     
 	#if INCLUDE_PRINT == 1
 	//print
 	void print() {
 	    char buf[80];
-	    sprintf(buf, "{id: %d, name: %s, (deg:cm) %s, ", id(), name(), text(far_lt));
-	    strcat(buf, text(near_lt));
+	    sprintf(buf, "{id: %d, name: %s, (deg:cm) %s, ", id(), name(), text(p4));
+	    strcat(buf, text(p2));
 		strcat(buf, ", ");
-	    strcat(buf, text(mid));
+	    strcat(buf, text(p0));
 		strcat(buf, ", ");
-	    strcat(buf, text(near_rt));
+	    strcat(buf, text(p1));
 		strcat(buf, ", ");
-	    strcat(buf, text(far_rt));
+	    strcat(buf, text(p3));
 		strcat(buf, "}");
 		
 		Serial.println(buf);
