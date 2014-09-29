@@ -52,7 +52,7 @@ namespace LOB {		//Navy navigational reference to a line of bearing
 }
 
 namespace Port {
-	//Used to define the port that an LED is connected to on the I2C expander
+	//Used to define the ports on the I2C expander
 	enum port{p0=0x01, 
 	          p1=0x02, 
 			  p2=0x04, 
@@ -62,6 +62,17 @@ namespace Port {
 			  p6=0x40, 
 			  p7=0x80, 
 			  error};
+}
+
+namespace Bump_state {
+    // Used in controller to set a bool value when the robot bumps into 
+    // something and is maneuvering to get clear again.
+	enum bs {clear, bumped};
+	
+	inline const char* const text(bs s) {
+      const char* res[4] = {(s == clear) ? "clr" : "bum"};
+      return res[0];
+    }
 }
 
 
@@ -448,6 +459,26 @@ inline const char* text(const Scan_pt& sp) {
 
 //Define an error point to check for return values of Scan points out of range
 const Scan_pt ERROR_PT(999,999);
+
+//************************************************************************
+//*                         TRIP POINT
+//************************************************************************
+class Trip_pt : public Pair<int, int> {
+public:
+	Trip_pt(int heading, int range) : Pair<int, int>(heading, range) {}
+	
+	Trip_pt() : Pair<int, int>(-1,-1) {}
+	
+	const int heading() const {return first(); }
+	const int range() const {return second(); }
+	
+};
+
+inline const char* text(const Trip_pt& tp) {
+	char buf[10];
+	sprintf(buf, "%03d:%03d", tp.first(), tp.second() );
+	return buf;
+}
 
 } //close namespace gw
 

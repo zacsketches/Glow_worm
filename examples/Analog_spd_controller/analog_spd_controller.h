@@ -11,20 +11,23 @@
 //* Read a pot on A0 and publish the cmd_velocity message accordingly
 //*******************************************************************
 
-extern Cmd_velocity_msg cmd_velocity;
+extern Cmd_velocity_msg cmd_velocity_msg;
 extern Clearinghouse ch;
 
 class Analog_spd_controller : public Node {
 
 private:
 	int control_pin;
+
+        bool test;
+
 	Publisher<Cmd_velocity_msg> pub;
-    Cmd_velocity_msg local_msg;   //local copy of the message
+        Cmd_velocity_msg local_msg;   //local copy of the message
         
 public:
-	Analog_spd_controller(const int pin)
+	Analog_spd_controller(const int pin, bool test_mode=false)
 		:Node("Anlg_spd_ctrl"),
-		pub(&cmd_velocity, &ch, local_msg),
+		pub(&cmd_velocity_msg, &ch, local_msg),
 		control_pin(pin)
 	{
 		//no pinMode setting required for Analog reads
@@ -33,9 +36,19 @@ public:
 	// From Base class
     //    char* name()
 	//    int id()
+
+    //Required pure virtual from base
+    void begin() {}
     
     void run() {
-		int val = analogRead(control_pin);
+                static int val = 500;
+                if(test) {
+                  int multiple = random(0,2);
+                  multiple = (multiple == 0 ) ? -1 : 1; 
+                  val += multiple;
+                  val = constrain(val, 0, 1023);
+                } 
+                else val = analogRead(control_pin);
 		val = map(val, 0, 1023, 0, 255);
 		local_msg.l_spd = val;
 		local_msg.r_spd = val;

@@ -1,4 +1,3 @@
-
 /* 
  * Rover Motor Controller Conncted as follows:
  *   Rt dir on pin 2
@@ -8,9 +7,13 @@
  */
 
 #include <Vector.h>
+#include <Pair.h>
 #include <clearinghouse.h>
-#include "cmd_velocity.h"
-#include "Rover_plant.h"
+#include <messages/cmd_velocity.h>
+#include <Rover_plant.h>
+
+
+
 #include "analog_spd_controller.h"
 
 Clearinghouse ch;
@@ -19,14 +22,14 @@ Clearinghouse ch;
 int Message::msg_count = 0;
 int Node::node_count = 0;
 
-Cmd_velocity_msg cmd_velocity;
+Cmd_velocity_msg cmd_velocity_msg;
 
 /*---------Construct Rover_plant and Motors------------------------*/
 Rover_plant plant(2);                   //(2 motors)
 Motor* mtr_lt = new Motor("lt", 4, 5);  //(name, dir_pin, pwm_pin)
 Motor* mtr_rt = new Motor("rt", 2, 3);
 
-Analog_spd_controller controller(0);    //pot on pin 0
+Analog_spd_controller controller(0, true);    //pot on pin 0, test_mode
 
 /*---------Setup--------------------------------------------------*/
 void setup() {
@@ -63,4 +66,6 @@ void loop() {
   
   //uncomment to see the messages from the controller
   // controller.print();
+  
+  cmd_velocity_msg.print();
 }

@@ -9,6 +9,8 @@
 //************************************************************************
 #define INCLUDE_PRINT 1
 
+using namespace gw;
+
 struct Cmd_velocity_msg : public Message {
 	
 	// Data available from base class
@@ -42,5 +44,6 @@ struct Cmd_velocity_msg : public Message {
     }
 	#endif
 };
+
 #endif
  

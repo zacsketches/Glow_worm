@@ -41,12 +41,13 @@ struct Bumper_msg : public Message {
 	#if INCLUDE_PRINT == 1
 	//print
 	void print() {
-		Serial.print(F("id: "));
+		Serial.print(F("{id: "));
 		Serial.print(id());
 		Serial.print(F("\tname: "));
 		Serial.print(name());
 		Serial.print(F("\tval: "));
-		Serial.println(text(pressed));
+		Serial.print(text(pressed));
+        Serial.println(F("}"));
 	}
 	#endif
 		
