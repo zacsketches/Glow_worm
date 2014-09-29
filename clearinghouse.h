@@ -23,7 +23,7 @@
 
 namespace Direction {
     //Used to define motor direction
-	enum dir {fwd, back};
+	enum dir {fwd, bck};
 	
     inline const char* text(dir d) {
       const char* res[5] = {(d == fwd) ? "frwd" : "back"};
@@ -67,14 +67,40 @@ namespace Port {
 namespace Bump_state {
     // Used in controller to set a bool value when the robot bumps into 
     // something and is maneuvering to get clear again.
-	enum bs {clear, bumped};
-	
-	inline const char* const text(bs s) {
-      const char* res[4] = {(s == clear) ? "clr" : "bum"};
-      return res[0];
+	enum bs {clear, lt_bump, rt_bump};
+		
+	inline const char* text(bs s) {
+        const char* res;
+    
+        const char res0[4] = "clr";
+        const char res1[4] = "l_b";
+        const char res2[4] = "r_b";
+            
+        switch(s) {
+            case clear:
+                res = res0; 
+                break;
+            case lt_bump:
+                res = res1;
+                break;
+            case rt_bump:
+                res = res2;    
+                break;
+        }
+        return res;
     }
 }
 
+namespace Danger_close_state {
+    // Used in controller to set a bool value when the robot bumps into 
+    // something and is maneuvering to get clear again.
+	enum dc {clear, danger_close};
+	
+	inline const char* const text(dc d) {
+      const char* res[4] = {(d == clear) ? "clr" : "dcl"};
+      return res[0];
+    }
+}
 
 //Namespace Glow Worm
 namespace gw {
@@ -437,6 +463,9 @@ public:
 	const int heading() const {return first(); }
 	const int range() const {return second(); }
 	
+	void set_heading(const int h) {val_1 = h;}
+    void set_range(const int r) {val_2 = r;}
+	
 };
 
 inline bool operator==(const Scan_pt& a, const Scan_pt& b ){
@@ -464,19 +493,27 @@ const Scan_pt ERROR_PT(999,999);
 //*                         TRIP POINT
 //************************************************************************
 class Trip_pt : public Pair<int, int> {
+private:
+    byte f;  //the bit flag of the particular trip point that is
+                // or'd to show all the tripped points in the sensor
 public:
-	Trip_pt(int heading, int range) : Pair<int, int>(heading, range) {}
-	
-	Trip_pt() : Pair<int, int>(-1,-1) {}
-	
+	Trip_pt(int heading = -1, int range = -1, byte flag=0x00) 
+	    : Pair<int, int>(heading, range), f(flag) 
+	{}
+		
 	const int heading() const {return first(); }
 	const int range() const {return second(); }
+    const byte flag() const { return f; }
 	
+    void set_heading(const int h) {val_1 = h;}
+    void set_range(const int r) {val_2 = r;}
+    void set_flag(const byte flag) {f = flag;}
 };
 
 inline const char* text(const Trip_pt& tp) {
-	char buf[10];
-	sprintf(buf, "%03d:%03d", tp.first(), tp.second() );
+    //print format of "000:000:0x00"
+	char buf[14];
+	sprintf(buf, "%03d:%03d:0x%02x", tp.first(), tp.second(), tp.flag() );
 	return buf;
 }
 

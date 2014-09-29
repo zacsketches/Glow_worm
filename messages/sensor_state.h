@@ -4,11 +4,11 @@
 #include <arduino.h>
 #include <clearinghouse.h>
 
+#define INCLUDE_PRINT 1
+
 //************************************************************************
 //*                         SENSOR STATE MESSAGE
 //************************************************************************
-
-#define INCLUDE_PRINT 1
 
 using namespace gw;
 

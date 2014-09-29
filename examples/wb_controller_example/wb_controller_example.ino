@@ -3,9 +3,9 @@
     -implement the WB_controller .cpp file
     - figure out how to interact/control it from the 
     main sketch.
-    - use the Vector<int>& function recently added to Scanner
-    so that I can see the headings that are scanned and set up
-    the trip points in the WB_controller constructor.
+    - okay...worked most of the afternoon....and have the controller
+    working for everything up through the bump reaction....now I need
+    to tailor the danger close reaction and the whisker reaction.
 */
 
 //data structures
@@ -50,6 +50,7 @@ Cmd_velocity_msg cmd_velocity_msg;
 Scanner_5pt scanner(servo_pin, ping_pin, servo_ctr, span_width, servo_angular_rate, true);
   Multi_bumper lt_bumper(lt_bumper_pin, &lt_bumper_msg, &ch, true);
   Multi_bumper rt_bumper(rt_bumper_pin, &rt_bumper_msg, &ch, true);
+  WB_controller controller;
 
 void setup() {
   Serial.begin(57600);
@@ -66,12 +67,27 @@ void setup() {
   rt_bumper.begin();
   rt_bumper.print();
   
+  controller.begin();
+  controller.print();
+  controller.show_trips();
+  controller.show_scan_data();
+  
   delay(7500);
 
 }
 
 void loop() {
-//  scanner.run();
+  scanner.run();
 //  five_pt_scan_msg.print();  
-//  ch.list();
+
+  lt_bumper.run();
+  rt_bumper.run();
+  
+  controller.run();
+//  cmd_velocity_msg.print();
+//  controller.show_scan_data(); 
+//  controller.show_sensor_state();
+//  controller.show_dc();
+//  controller.show_bs();
+  controller.show_active_control();
 }

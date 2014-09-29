@@ -16,6 +16,10 @@ Bumper_msg bumper_msg;
 
 Simple_bumper bumper(bumper_pin);
 
+Bump_state::bs b_state0 = Bump_state::clear;
+Bump_state::bs b_state1 = Bump_state::lt_bump;
+Bump_state::bs b_state2 = Bump_state::rt_bump;
+
 void setup() {
   Serial.begin(57600);
   Serial.println();
@@ -26,6 +30,11 @@ void setup() {
   //Inspect the values of the Node and Message
   bumper_msg.print();
   bumper.print();
+  
+  //Inspect the values of three Bump_state enums
+  Serial.println(text(b_state0));
+  Serial.println(text(b_state1));
+  Serial.println(text(b_state2));
 
   delay(2500);
 }
