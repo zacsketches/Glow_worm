@@ -1,7 +1,11 @@
 /*
-  todo: this compiles all components...now I need to implement the 
-  WB_controller .cpp file and figure out how to interact/control it
-  from the main sketch.
+  todo: this compiles all components...now I need to 
+    -implement the WB_controller .cpp file
+    - figure out how to interact/control it from the 
+    main sketch.
+    - use the Vector<int>& function recently added to Scanner
+    so that I can see the headings that are scanned and set up
+    the trip points in the WB_controller constructor.
 */
 
 //data structures
