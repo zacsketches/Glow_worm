@@ -4,10 +4,11 @@
 #include <arduino.h>
 #include <clearinghouse.h>
 
+#define INCLUDE_PRINT 1
+
 //************************************************************************
 //*                         COMMAND VELOCITY MESSAGE
 //************************************************************************
-#define INCLUDE_PRINT 1
 
 using namespace gw;
 
@@ -72,4 +73,3 @@ struct Cmd_velocity_msg : public Message {
 };
 
 #endif
- 

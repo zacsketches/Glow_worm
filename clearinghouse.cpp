@@ -48,4 +48,20 @@ Message* Clearinghouse::get_ptr(const char* name)
 	return res;
 }
 
+Message* Clearinghouse::get_ptr(const int msg_id)
+{
+	//users must test for NULL before using result
+	
+	Message* res = NULL;
+	//if id matches then return ptr to this message
+	for(int i = 0; i < store.size(); ++i) {
+		if(msg_id == store[i]->id() ) {  
+//			Serial.println(store[i]->id());
+//			Serial.println("found the message id");
+			res = store[i];
+		}
+	}
+	return res;
+}
+
 
