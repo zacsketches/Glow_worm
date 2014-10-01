@@ -42,7 +42,7 @@ struct Bumper_msg : public Message {
 	void print() {
 		Serial.print(F("{id: "));
 		Serial.print(id());
-		Serial.print(F(", name: "));
+        Serial.print(F(", name: "));
 		Serial.print(name());
 		Serial.print(F(", val: "));
 		Serial.print(text(pressed));

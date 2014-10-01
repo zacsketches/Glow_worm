@@ -10,17 +10,25 @@
 #define DEBUG_SUBSCRIBER  0
 
 /*
+	TODO add node_count() and message_count() functions
+*/
+
+/*
  * Clearinghouse is the heart of a publish and suscribe architecture for the Arduino
  * microcontroller.  This class allows other nodes to publish and/or subscribe to
  * data.
+ ** The error
+ *             wb_controller_example.cpp.o: In function `Subscriber':
+ *             Arduino/.../Glow_worm/clearinghouse.h:273: undefined reference t
+ * is usually caused by improper declaration of extern variables at the top of 
+ * Glow Worm component header file.  For example the error above was caused by 
+ * extern Cmd_velocity_msg cmd_velocity, when the correct name of the variable 
+ * in the .ino file was 'cmd_velocity_msg'.
  *
  * The error
- * 		wb_controller_example.cpp.o: In function `Subscriber':
- * 		Arduino/.../Glow_worm/clearinghouse.h:273: undefined reference to `cmd_velocity'
- * is usually caused by improper declaration of extern variables at the top of the 
- * Glow Worm component header file.  For example the error above was caused by declaring
- * extern Cmd_velocity_msg cmd_velocity, when the correct name of the variable declared
- * in the .ino file was 'cmd_velocity_msg'.
+ * 		Arduino/../Glow_worm/clearinghouse.h:463: error: expected unqualified-id 
+ *      before '<' token
+ * is caused by not including Pair and Vector in sketch.
 */
 
 //************************************************************************
@@ -194,6 +202,8 @@ public:
 	void update(Message* msg);
 	
 	Message* get_ptr(const char* name);
+	
+	Message* get_ptr(const int msg_id);
 		
 private:
 	Vector<Message*> store;
@@ -239,11 +249,20 @@ public:
 	void publish(){
 		//I need to call the update method on the message in
 		//the clearinhouse and pass a pointer to the local message
-		//publisher
 		const char* local_name = nodes_msg.name();
 		Message* store_msg_ptr = ch->get_ptr(local_name);
 		store_msg_ptr->update(&nodes_msg); 
 	}
+	void publish_by_id(){
+		//I need to call the updated method on the message in the
+		//ch with a pointer to the local message
+		int id = msg->id();
+//		Serial.print("the publishers id is: ");
+//		Serial.println(id);
+		Message* store_msg_ptr = ch->get_ptr(id);
+		store_msg_ptr->update(&nodes_msg); 			
+	}
+	
 	void publishing_where() const {
 		msg->print();
 	}
@@ -289,16 +308,28 @@ public:
 		// I need to call the update method on the local message
 		// using the data in the clearinghouse message
 		const char* local_name = nodes_msg.name();
-#if DEBUG_SUBSCRIBER == 1
-		Serial.print("From Susciber: local_name is: ");
-		Serial.println(local_name);
-#endif
 		Message* store_msg_ptr = ch->get_ptr(local_name);
-#if DEBUG_SUBSCRIBER == 1
-		Serial.print("From Susciber: ch msg node id is: ");
-		Serial.println(store_msg_ptr->id());
-#endif
 		nodes_msg.update(store_msg_ptr); 
+
+		#if DEBUG_SUBSCRIBER == 1
+				Serial.print(F("From Susciber: local_name is: "));
+				Serial.println(local_name);
+				Serial.print(F("From Susciber: ch msg node id is: "));
+				Serial.println(store_msg_ptr->id());
+		#endif
+	}
+	
+	void update_by_id(){
+		// I need to call the update method on the local message
+		// using the data in the clearinghouse message
+		int global_id = msg->id();
+		Message* store_msg_ptr = ch->get_ptr(global_id);
+		nodes_msg.update(store_msg_ptr); 
+
+		#if DEBUG_SUBSCRIBER == 1
+			Serial.print(F("the node is subscribed to id: "));
+			Serial.println(global_id);
+		#endif
 	}
 	
 	void subscribed_where() const {

@@ -4,10 +4,11 @@
 #include <arduino.h>
 #include <clearinghouse.h>
 
+#define INCLUDE_PRINT 1
+
 //************************************************************************
 //*                         COMMAND VELOCITY MESSAGE
 //************************************************************************
-#define INCLUDE_PRINT 1
 
 using namespace gw;
 
@@ -27,8 +28,18 @@ struct Cmd_velocity_msg : public Message {
 		l_dir(Direction::fwd), l_spd(0), r_dir(Direction::fwd), r_spd(0) 
 	{}
 	
+	//data and default name constructor
+	Cmd_velocity_msg(Direction::dir lt_dir,
+	    int lt_spd,
+	    Direction::dir rt_dir,
+	    int rt_spd) 
+	    : Message("Cmd_velocity"), l_dir(lt_dir), l_spd(lt_spd),
+	    r_dir(rt_dir), r_spd(rt_spd)
+	{}
+
 	//full constructor
-	Cmd_velocity_msg(const char* name, Direction::dir lt_dir,
+	Cmd_velocity_msg( const char* name,
+		Direction::dir lt_dir,
 	    int lt_spd,
 	    Direction::dir rt_dir,
 	    int rt_spd) 
@@ -62,4 +73,3 @@ struct Cmd_velocity_msg : public Message {
 };
 
 #endif
- 
