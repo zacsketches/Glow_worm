@@ -16,8 +16,8 @@ int gw::Node::node_count = 0;
 Bumper_msg lt_local_bumper_msg;
 Bumper_msg rt_local_bumper_msg;
 
-Multi_bumper b1(12, &lt_local_bumper_msg, &ch, true);
-Multi_bumper b2(13, &rt_local_bumper_msg, &ch, true);
+Multi_bumper b1(13, &lt_local_bumper_msg, &ch);
+Multi_bumper b2(12, &rt_local_bumper_msg, &ch);
 
 Bump_state::bs b_state;
 

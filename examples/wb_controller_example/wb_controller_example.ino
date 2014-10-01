@@ -28,8 +28,8 @@
 #include <memory.h>
 
 //Physical connections
-const int lt_bumper_pin = 12;
-const int rt_bumper_pin = 13;
+const int lt_bumper_pin = 13;
+const int rt_bumper_pin = 12;
 const int servo_pin = 6;
 const int ping_pin = 7;
 const int servo_ctr = 88;
@@ -52,9 +52,9 @@ Five_pt_scan_msg five_pt_scan_msg;
 Cmd_velocity_msg cmd_velocity_msg;
 
 /*------------Construct the system components----------------------------*/
-Scanner_5pt scanner(servo_pin, ping_pin, servo_ctr, span_width, servo_angular_rate, true);
-Multi_bumper lt_bumper(lt_bumper_pin, &lt_bumper_msg, &ch, true);
-Multi_bumper rt_bumper(rt_bumper_pin, &rt_bumper_msg, &ch, true);
+Scanner_5pt scanner(servo_pin, ping_pin, servo_ctr, span_width, servo_angular_rate);
+Multi_bumper lt_bumper(lt_bumper_pin, &lt_bumper_msg, &ch);
+Multi_bumper rt_bumper(rt_bumper_pin, &rt_bumper_msg, &ch);
 Rover_plant rover(2);
 Motor* mtr_lt = new Motor("lt", 4, 5);  //(name, dir_pin, pwm_pin)
 Motor* mtr_rt = new Motor("rt", 2, 3);
