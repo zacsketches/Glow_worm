@@ -28,11 +28,11 @@ struct Cmd_velocity_msg : public Message {
 	{}
 	
 	//full constructor
-	Cmd_velocity_msg(Direction::dir lt_dir,
+	Cmd_velocity_msg(const char* name, Direction::dir lt_dir,
 	    int lt_spd,
 	    Direction::dir rt_dir,
 	    int rt_spd) 
-	    : Message("Cmd_velocity"), l_dir(lt_dir), l_spd(lt_spd),
+	    : Message(name), l_dir(lt_dir), l_spd(lt_spd),
 	    r_dir(rt_dir), r_spd(rt_spd)
 	{}
     

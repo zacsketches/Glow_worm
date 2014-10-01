@@ -14,6 +14,13 @@
  * microcontroller.  This class allows other nodes to publish and/or subscribe to
  * data.
  *
+ * The error
+ * 		wb_controller_example.cpp.o: In function `Subscriber':
+ * 		Arduino/.../Glow_worm/clearinghouse.h:273: undefined reference to `cmd_velocity'
+ * is usually caused by improper declaration of extern variables at the top of the 
+ * Glow Worm component header file.  For example the error above was caused by declaring
+ * extern Cmd_velocity_msg cmd_velocity, when the correct name of the variable declared
+ * in the .ino file was 'cmd_velocity_msg'.
 */
 
 //************************************************************************
