@@ -173,7 +173,7 @@ public:
 		Serial.print(id());
 		Serial.print("\t");
 		Serial.print(name());
-		Serial.println("\tcustom print note implemented for this node");
+		Serial.println("\tCustom print not implemented for this node");
     };
 	
 	virtual void begin() = 0;
@@ -378,28 +378,51 @@ struct Motor_state {
 //*******************************************************************
 
 class Motor {
-    char* n;            //name
+    char* n;           //name
     int dp;            //dir_pin    
     int pp;            //pwm_pin
+	int sp;			   //current sensor pin...must be an Analog input
+	bool sense_enabled;
+	uint8_t forward_binary;
+	uint8_t reverse_binary;
     Motor_state ms;
     
     int translate_dir(Direction::dir d) {
-        /*
-            TODO add a 'bool reverse' data member that flips the 
-            return value below when set.
-        */
-        return (d == Direction::fwd) ? 0 : 1;
+        return (d == Direction::fwd) ? forward_binary : reverse_binary;
     }
     
 public:
+	// Constructor with no sense pin
     Motor(char* name,
           int direction_pin,
           int pwm_pin,
           Direction::dir direction = Direction::fwd,
           int speed = 0)
-          : n(name), dp(direction_pin), pp(pwm_pin), ms(direction, speed) {
+          : n(name), 
+		  dp(direction_pin), 
+		  pp(pwm_pin),
+		  sp(0), 
+		  sense_enabled(false),
+		  forward_binary(0),
+		  reverse_binary(1),
+		  ms(direction, speed) {
               pinMode(dp, OUTPUT);
           }
+    
+	// Constructor with sense pin
+	Motor(char* name,
+	    int direction_pin,
+	    int pwm_pin,
+		int sense_pin,
+	    Direction::dir direction = Direction::fwd,
+	    int speed = 0)
+	    : n(name), dp(direction_pin), pp(pwm_pin), sp(sense_pin), 
+	    sense_enabled(true), 
+	    forward_binary(0),
+	    reverse_binary(1),
+		ms(direction, speed) {
+	        pinMode(dp, OUTPUT);
+	    }  
     
    char* name() {return n;}    
 
@@ -409,7 +432,16 @@ public:
        ms.update(direction, speed); 
    }
    
+   int current() {
+	   return (sense_enabled) ? analogRead(sp) : 0;
+   }
+   
    void set_state(Motor_state new_state) { ms = new_state; }
+   
+   void reverse() {
+	   forward_binary = ~forward_binary;
+	   reverse_binary = ~reverse_binary;
+   }
    
    void drive() {
        int direction = translate_dir(ms.d);
@@ -429,7 +461,12 @@ public:
 	   Serial.print(F("\tdir_pin: "));
 	   Serial.print(dp);
 	   Serial.print(F("\tpwm_pin: "));
-	   Serial.println(pp);
+	   Serial.print(pp);
+	   if(sense_enabled) {
+		   Serial.print(F("\tsense_pin: "));
+		   Serial.print(sp);
+	   }
+	   Serial.println();
    }
 };
 
