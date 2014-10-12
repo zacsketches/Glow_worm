@@ -25,7 +25,7 @@ struct Plant_status_msg : public Message {
 	    
     //minimal constructor
     Plant_status_msg() : Message("plant_status"), 
-		lt_ct(0), lt_I(0.0), rt_ct(0), rt_I(0.0), timestamp( millis() ) {}
+		lt_ct(0), lt_I(0.0), rt_ct(0), rt_I(0.0), timestamp(0) {}
 		
 	//REQUIRED VIRTUAL VOID FROM BASE
 	void update(Message* msg) {

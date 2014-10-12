@@ -8,6 +8,8 @@
 #define DEBUG_DRIVE       0
 #define DEBUG_MOTOR_STATE 0
 #define DEBUG_SUBSCRIBER  0
+#define DEBUG_PUBLISH 0
+
 
 /*
 	TODO add node_count() and message_count() functions
@@ -44,6 +46,10 @@ namespace Direction {
       const char* res[5] = {(d == fwd) ? "frwd" : "back"};
       return res[0];
     }	
+}
+
+namespace Position {
+	enum position{lt, rt, none};
 }
 
 namespace State {
@@ -213,7 +219,6 @@ private:
 //************************************************************************
 //*                         PUBLISHER
 //************************************************************************
-#define DEBUG_PUBLISH 0
 
 template<class MSG>
 class Publisher {
@@ -378,11 +383,12 @@ struct Motor_state {
 //*******************************************************************
 
 class Motor {
-    char* n;           //name
+    const char* n;           //name
     int dp;            //dir_pin    
     int pp;            //pwm_pin
 	int sp;			   //current sensor pin...must be an Analog input
 	bool sense_enabled;
+	Position::position p;
 	uint8_t forward_binary;
 	uint8_t reverse_binary;
     Motor_state ms;
@@ -393,14 +399,16 @@ class Motor {
     
 public:
 	// Constructor with no sense pin
-    Motor(char* name,
+    Motor(const char* name,
           int direction_pin,
           int pwm_pin,
+		  Position::position pos = Position::none,
           Direction::dir direction = Direction::fwd,
           int speed = 0)
           : n(name), 
 		  dp(direction_pin), 
 		  pp(pwm_pin),
+		  p(pos),
 		  sp(0), 
 		  sense_enabled(false),
 		  forward_binary(0),
@@ -410,21 +418,26 @@ public:
           }
     
 	// Constructor with sense pin
-	Motor(char* name,
+	Motor(const char* name,
 	    int direction_pin,
 	    int pwm_pin,
 		int sense_pin,
+	    Position::position pos = Position::none,
 	    Direction::dir direction = Direction::fwd,
 	    int speed = 0)
-	    : n(name), dp(direction_pin), pp(pwm_pin), sp(sense_pin), 
-	    sense_enabled(true), 
+	    : n(name), 
+		dp(direction_pin), 
+		pp(pwm_pin), 
+		sp(sense_pin), 
+	    p(pos),
+		sense_enabled(true), 
 	    forward_binary(0),
 	    reverse_binary(1),
 		ms(direction, speed) {
 	        pinMode(dp, OUTPUT);
 	    }  
     
-   char* name() {return n;}    
+   const char* name() {return n;}    
 
    Motor_state state() const { return ms;}
    

@@ -23,7 +23,7 @@ struct Pitch_msg : public Message {
     
     //minimal constructor
     Pitch_msg() : Message("pitch"), 
-		theta(0), timestamp(millis()) {}
+		theta(0), timestamp(0) {}
 	
 	//REQUIRED VIRTUAL VOID FROM BASE
 	void update(Message* msg) {
