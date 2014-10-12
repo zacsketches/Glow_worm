@@ -437,25 +437,37 @@ public:
 	        pinMode(dp, OUTPUT);
 	    }  
     
+	//Name
    const char* name() {return n;}    
-
+	
+   //Motor State
    Motor_state state() const { return ms;}
-   
    void set_state(Direction::dir direction, int speed) { 
        ms.update(direction, speed); 
    }
+   void set_state(Motor_state new_state) { ms = new_state; }
    
-   int current() {
+   //Current
+   int current() const{
 	   return (sense_enabled) ? analogRead(sp) : 0;
    }
    
-   void set_state(Motor_state new_state) { ms = new_state; }
-   
+   //Reverse
    void reverse() {
-	   forward_binary = ~forward_binary;
-	   reverse_binary = ~reverse_binary;
+	   // Serial.println("Reversing the motor direction");
+	   // char buf[50];
+	   // sprintf(buf, "fwd: %d\tback: %d", forward_binary, reverse_binary);
+	   // Serial.println(buf);
+	   forward_binary = !forward_binary;
+	   reverse_binary = !reverse_binary;
+	   // sprintf(buf, "fwd: %d\tback: %d", forward_binary, reverse_binary);
+	   // Serial.println(buf);
    }
    
+   //Pos
+   Position::position pos() const { return p; }
+   
+   //Drive
    void drive() {
        int direction = translate_dir(ms.d);
        digitalWrite(dp, direction);
@@ -466,6 +478,17 @@ public:
 			sprintf(buf, "\t%s motor dir: %i\tspd: %i", n, ms.d, ms.pwm);
 			Serial.println(buf);
 	   #endif
+   }
+   
+   void drive(Direction::dir d, int pwm_val) {
+	   int direction = translate_dir(d);
+
+	   // char buf[50];
+	   // sprintf(buf, "from drive the %s direction is:%d", name(), direction);
+	   // Serial.println(buf);
+	   
+	   digitalWrite(dp, direction);
+	   analogWrite(pp, pwm_val);
    }
    
    void print() {
