@@ -628,6 +628,105 @@ inline const char* text(const Trip_pt& tp) {
 	return buf;
 }
 
+//************************************************************************
+//*                         VECTOR MATH
+//* vector data structure represents the notion of a vector in 
+//* linear algebra.  Used in storing IMU data.  Vector functions
+//* implement the basics of linear algebra
+//************************************************************************
+
+template <typename T> struct vector
+{
+  T x, y, z;
+};
+
+template <typename Ta, typename Tb, typename To> 
+inline
+void vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out);
+
+static void vector_normalize(vector<float> *a);
+static void vector_normalize(vector<int>* a);
+
+
+template <typename Ta, typename Tb> 
+inline
+float vector_dot(const vector<Ta> *a, const vector<Tb> *b)
+{
+  return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
+}
+
+template <typename Ta, typename Tb, typename Tr> 
+inline 
+void vector_add(const vector<Ta>* a, const vector<Tb>* b, vector<Tr>* result){
+    result->x = a->x + b->x;
+    result->y = a->y + b->y;
+    result->z = a->z + b->z;	  
+}
+
+template <typename Ta, typename Tb> 
+inline 
+void vector_add(vector<Ta>* a, const vector<Tb>* b){
+    a->x = a->x + b->x;
+    a->y = a->y + b->y;
+    a->z = a->z + b->z;	  
+}
+
+template <typename T>
+inline
+void vector_scale(vector<T>& a, float scalar){
+	a.x = a.x * scalar;
+	a.y = a.y * scalar;
+	a.z = a.z * scalar;
+}
+
+template <typename T>
+inline
+void vector_print(const vector<T>& a) 
+{
+	Serial.print("{x:");
+	Serial.print(a.x,4);
+	Serial.print(", y:");
+	Serial.print(a.y,4);
+	Serial.print(", z:");
+	Serial.print(a.z,4);
+	Serial.println("}");
+}
+
+template <typename Ta, typename Tb, typename To> 
+inline
+void vector_cross(const vector<Ta> *a,const vector<Tb> *b, vector<To> *out)
+{
+  out->x = (a->y * b->z) - (a->z * b->y);
+  out->y = (a->z * b->x) - (a->x * b->z);
+  out->z = (a->x * b->y) - (a->y * b->x);
+}
+
+void vector_normalize(vector<float> *a)
+{
+  float mag = sqrt(vector_dot(a, a));
+  a->x /= mag;
+  a->y /= mag;
+  a->z /= mag;
+}
+
+void vector_normalize(vector<int>* a) {
+	vector<float> temp;
+	temp.x = (float)a->x;
+	temp.y = (float)a->y;
+	temp.z = (float)a->z;
+	
+	Serial.print("before normalizing temp is: ");
+	vector_print(temp);	
+	vector_normalize(&temp);
+	
+	Serial.print("AFTER normalizing temp is: ");
+	vector_print(temp);	
+	
+	a->x = (int)temp.x;
+	a->y = (int)temp.y;
+	a->z = (int)temp.z;
+}
+
 } //close namespace gw
 
 #endif
