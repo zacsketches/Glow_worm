@@ -18,8 +18,8 @@ struct Pitch_msg : public Message {
 	//      const char* name()
 	//      int id()
 	
-	int theta;
-	uint32_t timestamp;
+	double theta;
+	Time timestamp;
     
     //minimal constructor
     Pitch_msg() : Message("pitch"), 

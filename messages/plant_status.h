@@ -21,7 +21,7 @@ struct Plant_status_msg : public Message {
 	float lt_I;			//millivolts
 	long  rt_ct;
 	float rt_I;
-	uint32_t timestamp;
+	Time timestamp;
 	    
     //minimal constructor
     Plant_status_msg() : Message("plant_status"), 

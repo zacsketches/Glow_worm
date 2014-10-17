@@ -66,6 +66,13 @@
 */
 
 //************************************************************************
+//*                       GLOBAL TYPEDEFS AND ALIASES
+//************************************************************************
+
+typedef unsigned long Time;
+
+
+//************************************************************************
 //*                         Global Namespace enums
 //************************************************************************
 
@@ -157,6 +164,11 @@ namespace Danger_close_state {
 
 //Namespace Glow Worm
 namespace gw {
+	
+// I2C info that's not available anywhere else
+// Global to find if Wire.begin has already been called.  I only call this
+//Wire.begin() from gw components if this is false.
+static bool wire_begun = false;
 	
 //************************************************************************
 //*                         MESSAGE
