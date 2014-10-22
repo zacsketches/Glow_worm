@@ -18,10 +18,10 @@ struct State_vec_msg : public Message {
 	//      const char* name()
 	//      int id()
 	
-	int theta;
-	int theta_dot;
-	int x;
-	int x_dot;
+	double theta;
+	double theta_dot;
+	double x;
+	double x_dot;
     
     //minimal constructor
     State_vec_msg() : Message("state_vec"), 
