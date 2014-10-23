@@ -5,10 +5,10 @@
 #include <Vector.h>
 #include <Pair.h>
 
-#define DEBUG_DRIVE       0
+#define DEBUG_DRIVE       1
 #define DEBUG_MOTOR_STATE 0
 #define DEBUG_SUBSCRIBER  0
-#define DEBUG_PUBLISH 0
+#define DEBUG_PUBLISH     0
 
 /*
 	TODO add node_count() and message_count() functions
@@ -437,8 +437,8 @@ private:
     int pp;            //pwm_pin
 	int sp;			   //current sensor pin...must be an Analog input
 	bool sense_enabled;
-	int lower_db;		//lower deadband
-	int upper_db;       //upper deadband
+	int fwd_db;		  //forward deadband
+	int rev_db;       //reverse deadband
 	Position::position p;
 	uint8_t forward_binary;
 	uint8_t reverse_binary;
@@ -448,6 +448,18 @@ private:
         return (d == Direction::fwd) ? forward_binary : reverse_binary;
     }
     
+	int deadband_compensate(Direction::dir d, int raw_pwm) {
+		int comp_pwm = 0;
+		
+		if( d == Direction::fwd ) {
+			comp_pwm = map(raw_pwm, 0, 255, fwd_db, 255); 
+		} else {
+			compt_pwm = map(raw_pwm, 0, 255, rev_db, 255);
+		}
+		
+		return comp_pwm;
+	}
+	
 public:
 	// Constructor with no sense pin
     Motor(const char* name,
@@ -462,8 +474,8 @@ public:
 		  p(pos),
 		  sp(0), 
 		  sense_enabled(false),
-		  lower_db(0),
-		  upper_db(0),
+		  fwd_db(0),
+		  rev_db(0),
 		  forward_binary(0),
 		  reverse_binary(1),
 		  ms(direction, speed) {
@@ -484,8 +496,8 @@ public:
 		sp(sense_pin), 
 	    p(pos),
 		sense_enabled(true),
-		lower_db(0),
-		upper_db(0),		
+		fwd_db(0),
+		rev_db(0),		
 	    forward_binary(0),
 	    reverse_binary(1),
 		ms(direction, speed) {
@@ -523,11 +535,11 @@ public:
    //using the functions below sets the scale factors for the
    //linear scaling done to make sure small control commands
    //result in motor motion
-   int upper() {return upper_db;}
-   int lower() {return lower_db;}
-   void set_deadband(int lower, int upper){
-		lower_db=lower;
-		upper_db=upper;
+   int forward_db() {return fwd_db;}
+   int reverse_db() {return rev_db;}
+   void set_deadband(int forward, int reverse){
+		fwd_db=forward;
+		rev_db=reverse;
    }
    
    //Pos
@@ -537,20 +549,27 @@ public:
    void drive() {
        int direction = translate_dir(ms.d);
        digitalWrite(dp, direction);
-       analogWrite(pp, ms.pwm);
+	   int pwm_sig = deadband_compensate(ms.d, ms.pwm);
+       analogWrite(pp, pwm_sig);
        #if DEBUG_DRIVE == 1
 			Serial.print(F("@Drive debug"));
 			char buf[50];
-			sprintf(buf, "\t%s motor dir: %i\tspd: %i", n, ms.d, ms.pwm);
+			sprintf(buf, "\t%s motor dir: %i\tspd: %i", n, ms.d, pwm_sig);
 			Serial.println(buf);
 	   #endif
    }
    
-   void drive(Direction::dir d, int pwm_val) {
+   void drive(Direction::dir d, int raw_pwm) {
 	   int direction = translate_dir(d);
-	   
-	   digitalWrite(dp, direction);
-	   analogWrite(pp, pwm_val);
+	   int pwm_sig = deadband_compensate(d, raw_pwm);
+ 	   digitalWrite(dp, direction);
+	   analogWrite(pp, pwm_sig);
+	   #if DEBUG_DRIVE == 1
+			Serial.print(F("@Drive debug"));
+			char buf[50];
+			sprintf(buf, "\t%s motor dir:%s\tspd:%i", n, text(d), pwm_sig);
+			Serial.println(buf);
+	   #endif
    }
    
    void print() {

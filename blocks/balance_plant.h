@@ -42,7 +42,11 @@ private:
      */
      
 	// 2A / 1023 ADC resolution = .00196
-	static const double conv_I = 0.00196;  
+	static const double conv_I = 0.00196;
+	
+	// Max effort taken from model of controller in MATLAB simulation
+	// to disturbances.
+	static const int max_effort = 1000;
 	
 	//Vectors for supporting components
     Vector<Motor*> motors;
@@ -89,7 +93,7 @@ public:
 		int effort = local_effort_msg.u;
 		Direction::dir direction = (effort >= 0) ? Direction::fwd : Direction::bck;
 		effort = abs(effort);
-		effort = map(effort, 0,1000,0,255);
+		effort = map(effort, 0,max_effort,0,255);
 		
 		//drive the plant
 		// char buf[50];
