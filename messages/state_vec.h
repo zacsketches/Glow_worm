@@ -39,10 +39,19 @@ struct State_vec_msg : public Message {
 	#if INCLUDE_PRINT == 1
 	//print
 	void print() {
-		char buf[120];
-		sprintf(buf, "{id:%d,name:%s,theta:%d,theta_dot:%d,x:%d,x_dot:%d}",
-			id(), name(), theta, theta_dot, x, x_dot);
-		Serial.println(buf);
+		Serial.print("{id:");
+		Serial.print(id());
+		Serial.print(",name:");
+		Serial.print(name());
+		Serial.print(",theta:");
+		Serial.print(theta);
+		Serial.print(",theta_dot:");
+		Serial.print(theta_dot);
+		Serial.print(",x:");
+		Serial.print(x);
+		Serial.print(",x_dot:");
+		Serial.print(x_dot);
+		Serial.println("}");
 	}
 	#endif
 		

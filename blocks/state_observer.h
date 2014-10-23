@@ -126,7 +126,6 @@ public:
 			Serial.print(id());
 			Serial.print("\t");
 			Serial.println(name());   
-			Serial.print("\t");
 			Serial.print(F("\tSubscribed to: "));
 			plant_sub.subscribed_where();
 			Serial.print(F("\tSubscribed to: "));
