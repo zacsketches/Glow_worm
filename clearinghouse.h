@@ -10,7 +10,6 @@
 #define DEBUG_SUBSCRIBER  0
 #define DEBUG_PUBLISH 0
 
-
 /*
 	TODO add node_count() and message_count() functions
 */
@@ -71,7 +70,17 @@
 
 typedef unsigned long Time;
 
+//************************************************************************
+//*                       GLOBAL CONSTANTS
+//************************************************************************
+namespace gw {
 
+// I2C interface control variable. 
+// Only call Wire.begin() from gw components if this is false.
+// When you call Wire.begin() then set 'gw::wire_begun = true;'
+static bool wire_begun = false;
+
+}
 //************************************************************************
 //*                         Global Namespace enums
 //************************************************************************
@@ -164,12 +173,7 @@ namespace Danger_close_state {
 
 //Namespace Glow Worm
 namespace gw {
-	
-// I2C info that's not available anywhere else
-// Global to find if Wire.begin has already been called.  I only call this
-//Wire.begin() from gw components if this is false.
-static bool wire_begun = false;
-	
+		
 //************************************************************************
 //*                         MESSAGE
 //************************************************************************
@@ -427,11 +431,14 @@ struct Motor_state {
 //*******************************************************************
 
 class Motor {
-    const char* n;           //name
+private:
+    const char* n;     //name
     int dp;            //dir_pin    
     int pp;            //pwm_pin
 	int sp;			   //current sensor pin...must be an Analog input
 	bool sense_enabled;
+	int lower_db;		//lower deadband
+	int upper_db;       //upper deadband
 	Position::position p;
 	uint8_t forward_binary;
 	uint8_t reverse_binary;
@@ -455,6 +462,8 @@ public:
 		  p(pos),
 		  sp(0), 
 		  sense_enabled(false),
+		  lower_db(0),
+		  upper_db(0),
 		  forward_binary(0),
 		  reverse_binary(1),
 		  ms(direction, speed) {
@@ -474,7 +483,9 @@ public:
 		pp(pwm_pin), 
 		sp(sense_pin), 
 	    p(pos),
-		sense_enabled(true), 
+		sense_enabled(true),
+		lower_db(0),
+		upper_db(0),		
 	    forward_binary(0),
 	    reverse_binary(1),
 		ms(direction, speed) {
@@ -497,15 +508,26 @@ public:
    }
    
    //Reverse
+   //When a motor is physically installed and the leads cannot
+   //be changed, this function will reverse the motors response
+   //to Direction::[fwd|back]
    void reverse() {
-	   // Serial.println("Reversing the motor direction");
-	   // char buf[50];
-	   // sprintf(buf, "fwd: %d\tback: %d", forward_binary, reverse_binary);
-	   // Serial.println(buf);
 	   forward_binary = !forward_binary;
 	   reverse_binary = !reverse_binary;
-	   // sprintf(buf, "fwd: %d\tback: %d", forward_binary, reverse_binary);
-	   // Serial.println(buf);
+   }
+   
+   //Deadband
+   //All voltage regulated motors have a deadband where the
+   //applied voltage is too small to overcome the static
+   //friction of the motor and/or gears.  Setting the deadband
+   //using the functions below sets the scale factors for the
+   //linear scaling done to make sure small control commands
+   //result in motor motion
+   int upper() {return upper_db;}
+   int lower() {return lower_db;}
+   void set_deadband(int lower, int upper){
+		lower_db=lower;
+		upper_db=upper;
    }
    
    //Pos
@@ -526,10 +548,6 @@ public:
    
    void drive(Direction::dir d, int pwm_val) {
 	   int direction = translate_dir(d);
-
-	   // char buf[50];
-	   // sprintf(buf, "from drive the %s direction is:%d", name(), direction);
-	   // Serial.println(buf);
 	   
 	   digitalWrite(dp, direction);
 	   analogWrite(pp, pwm_val);
