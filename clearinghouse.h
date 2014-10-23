@@ -454,7 +454,7 @@ private:
 		if( d == Direction::fwd ) {
 			comp_pwm = map(raw_pwm, 0, 255, fwd_db, 255); 
 		} else {
-			compt_pwm = map(raw_pwm, 0, 255, rev_db, 255);
+			comp_pwm = map(raw_pwm, 0, 255, abs(rev_db), 255);
 		}
 		
 		return comp_pwm;
