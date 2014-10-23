@@ -14,6 +14,9 @@
     deadband solution.  After each new step the system delays for the amount
     of step_delay defined below which allows the motor to run at that step 
     for a moment before proceeding to the next step.
+
+	The system will compute the number of loops defined in loops and 
+	report an average of those values at the end of the test.
     
     This dead band solver is set up to work with the balance plant which
     consists of two quadrature encoded motors and is driven from the
@@ -25,6 +28,7 @@
 int step_size = 50;
 const int step_delay = 1500;
 const int starting_effort = 0;
+const int loops = 5;
 
 //Data structures
 #include <Vector.h>
@@ -88,6 +92,20 @@ public:
         return x_dot;
     }
 };
+
+//************************************************************************
+//*               Find Average of the vals in vector<int>
+//************************************************************************
+int find_avg(Vector<int>& vec) {
+	int sum = 0;
+	for(int i = 0; i < vec.size(); ++i) {
+		sum += vec[i];
+	}
+	int avg = sum / vec.size();
+	
+	return avg;
+}
+
 
 //***********************************************************************
 //                               Main Sketch
@@ -168,84 +186,215 @@ void loop() {
     static int effort = 0;
     static bool test_complete = false; 
     static Time now = 0;
-    static Time step_complete = 0;       
+    static Time step_complete = 0;
+	static Vector<int> rt_fwd, rt_back, lt_fwd, lt_back;       
     
-    //compute deadband for right motor going forward
-    LOG("Testing right motor in the forward direction.");
-    effort = starting_effort;
-    test_complete = false;
-    now = millis();
-    computer.reset(plant_status_msg.rt_ct, plant_status_msg.timestamp);
-    while (!test_complete) {
-        //set up the step
-        now = millis();
-        step_complete = now + step_delay;
-        control_effort_msg.u = effort;
+	for(int i = 0; i < loops; ++i) {
+		Serial.print("\t\t*****BEGINNING LOOP ");
+		Serial.print(i);
+		Serial.println("*****");
+	    //compute deadband for right motor going forward
+	    LOG("Testing right motor in the forward direction.");
+	    effort = starting_effort;
+	    test_complete = false;
+	    now = millis();
+	    computer.reset(plant_status_msg.rt_ct, plant_status_msg.timestamp);
+	    while (!test_complete) {
+	        //set up the step
+	        now = millis();
+	        step_complete = now + step_delay;
+	        control_effort_msg.u = effort;
         
-        //run the step
-        while(now < step_complete) {
-            plant.run();            
-            now = millis();
-        }
+	        //run the step
+	        while(now < step_complete) {
+	            plant.run();            
+	            now = millis();
+	        }
         
-        //compute the velocity
-        double v_x = computer.solve(plant_status_msg.rt_ct, plant_status_msg.timestamp);
+	        //compute the velocity
+	        double v_x = computer.solve(plant_status_msg.rt_ct, plant_status_msg.timestamp);
 
-        //report the results
-        Serial.print("\teffort is:");
-        Serial.print(effort);
-        Serial.print("\tVelocity is:");
-        Serial.println(v_x, 2);
+	        //report the results
+	        Serial.print("\teffort is:");
+	        Serial.print(effort);
+	        Serial.print("\tVelocity is:");
+	        Serial.println(v_x, 2);
         
-        //check to see if the step was sufficient
-        if(abs(v_x) >= .05) test_complete = true;
+	        //check to see if the step was sufficient
+	        if(abs(v_x) >= .05) {
+	          test_complete = true;
+	          Serial.print("\tRight motor began turning at an effort of: ");
+	          Serial.println(effort);
+	        }
+	        //get ready for the next loop
+	        effort += step_size;
+	    }
+
+	    //complete the first test
+		rt_fwd.push_back(effort - step_size);
+	    LOG("Completed the right forward test");
+	    control_effort_msg.u = 0;
+	    plant.run();
+	    delay(1000);
+	    plant.run();
+    
+	    //compute deadband for right motor going backward
+	    LOG("Testing right motor in the backward direction.");
+	    effort = -starting_effort;
+	    test_complete = false;
+	    now = millis();
+	    computer.reset(plant_status_msg.rt_ct, plant_status_msg.timestamp);
+	    while (!test_complete) {
+	        //set up the step
+	        now = millis();
+	        step_complete = now + step_delay;
+	        control_effort_msg.u = effort;
         
-        //get ready for the next loop
-        effort += step_size;
+	        //run the step
+	        while(now < step_complete) {
+	            plant.run();            
+	            now = millis();
+	        }
+        
+	        //compute the velocity
+	        double v_x = computer.solve(plant_status_msg.rt_ct, plant_status_msg.timestamp);
+
+	        //report the results
+	        Serial.print("\teffort is:");
+	        Serial.print(effort);
+	        Serial.print("\tVelocity is:");
+	        Serial.println(v_x, 2);
+        
+	        //check to see if the step was sufficient
+	        if(abs(v_x) >= .05) {
+	          test_complete = true;
+	          Serial.print("\tRight motor began turning at an effort of: ");
+	          Serial.println(effort);
+	        }        
+	        //get ready for the next loop
+	        effort -= step_size;
+	    }
+
+	    //complete the second test
+		rt_back.push_back(effort - step_size);
+	    LOG("Completed the right backward test");
+	    control_effort_msg.u = 0;
+	    plant.run();
+	    delay(1000);
+	    plant.run();
+
+	    //compute deadband for left motor going forward
+	    LOG("Testing left motor in the forward direction.");
+	    effort = starting_effort;
+	    test_complete = false;
+	    now = millis();
+	    computer.reset(plant_status_msg.lt_ct, plant_status_msg.timestamp);
+	    while (!test_complete) {
+	        //set up the step
+	        now = millis();
+	        step_complete = now + step_delay;
+	        control_effort_msg.u = effort;
+        
+	        //run the step
+	        while(now < step_complete) {
+	            plant.run();            
+	            now = millis();
+	        }
+        
+	        //compute the velocity
+	        double v_x = computer.solve(plant_status_msg.lt_ct, plant_status_msg.timestamp);
+
+	        //report the results
+	        Serial.print("\teffort is:");
+	        Serial.print(effort);
+	        Serial.print("\tVelocity is:");
+	        Serial.println(v_x, 2);
+        
+	        //check to see if the step was sufficient
+	        if(abs(v_x) >= .05) {
+	          test_complete = true;
+	          Serial.print("\tLeft motor began turning at an effort of: ");
+	          Serial.println(effort);
+	        }
+	        //get ready for the next loop
+	        effort += step_size;
+	    }
+
+	    //complete the third test
+		lt_fwd.push_back(effort - step_size);
+	    LOG("Completed the left forward test");
+	    control_effort_msg.u = 0;
+	    plant.run();
+	    delay(1000);
+	    plant.run();
+    
+	    //compute deadband for left motor going backward
+	    LOG("Testing left motor in the backward direction.");
+	    effort = -starting_effort;
+	    test_complete = false;
+	    now = millis();
+	    computer.reset(plant_status_msg.lt_ct, plant_status_msg.timestamp);
+	    while (!test_complete) {
+	        //set up the step
+	        now = millis();
+	        step_complete = now + step_delay;
+	        control_effort_msg.u = effort;
+        
+	        //run the step
+	        while(now < step_complete) {
+	            plant.run();            
+	            now = millis();
+	        }
+        
+	        //compute the velocity
+	        double v_x = computer.solve(plant_status_msg.lt_ct, plant_status_msg.timestamp);
+
+	        //report the results
+	        Serial.print("\teffort is:");
+	        Serial.print(effort);
+	        Serial.print("\tVelocity is:");
+	        Serial.println(v_x, 2);
+        
+	        //check to see if the step was sufficient
+	        if(abs(v_x) >= .05) {
+	          test_complete = true;
+	          Serial.print("\tLeft motor began turning at an effort of: ");
+	          Serial.println(effort);
+	        }        
+	        //get ready for the next loop
+	        effort -= step_size;
+	    }
+
+	    //complete the fourth test
+		lt_back.push_back(effort - step_size);
+	    LOG("Completed the left backward test");
+	    control_effort_msg.u = 0;
+	    plant.run();
+	    delay(1000);
+	    plant.run();  
+	}
+	
+	//display the averages
+	int avg_rt_fwd = find_avg(rt_fwd);
+	int avg_rt_back = find_avg(rt_back);
+	int avg_lt_fwd = find_avg(lt_fwd);
+	int avg_lt_back = find_avg(lt_back);
+	Serial.print("The rt fwd avg is: ");
+	Serial.println(avg_rt_fwd);
+	Serial.print("The rt back avg is: ");
+	Serial.println(avg_rt_back);
+	Serial.print("The lt fwd avg is: ");
+	Serial.println(avg_lt_fwd);
+	Serial.print("The lt back avg is: ");
+	Serial.println(avg_lt_back);
+	
+    //infinite loop to stop execution
+    while(1) {
+      control_effort_msg.u = 0;
+      plant.run(); 
     }
-
-    //complete the first test
-    LOG("Completed the right test");
-    control_effort_msg.u = 0;
-    plant.run();
-    delay(1000);
-    plant.run();
-    
-    //compute deadband for right motor going backward
-    LOG("Testing right motor in the backward direction.");
-    effort = -starting_effort;
-    test_complete = false;
-    now = millis();
-    computer.reset(plant_status_msg.rt_ct, plant_status_msg.timestamp);
-    while (!test_complete) {
-        //set up the step
-        now = millis();
-        step_complete = now + step_delay;
-        control_effort_msg.u = effort;
-        
-        //run the step
-        while(now < step_complete) {
-            plant.run();            
-            now = millis();
-        }
-        
-        //compute the velocity
-        double v_x = computer.solve(plant_status_msg.rt_ct, plant_status_msg.timestamp);
-
-        //report the results
-        Serial.print("\teffort is:");
-        Serial.print(effort);
-        Serial.print("\tVelocity is:");
-        Serial.println(v_x, 2);
-        
-        //check to see if the step was sufficient
-        if(abs(v_x) >= .05) test_complete = true;
-        
-        //get ready for the next loop
-        effort -= step_size;
-    }
-    
 }
+
 
 
 
