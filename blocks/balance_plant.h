@@ -1,5 +1,5 @@
-#ifndef ROVER_PLANT_H
-#define ROVER_PLANT_H SEP_2014
+#ifndef BALANCE_PLANT_H
+#define BALANCE_PLANT_H SEP_2014
 
 #include <arduino.h>
 
