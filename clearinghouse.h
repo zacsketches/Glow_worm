@@ -68,7 +68,8 @@
 //*                       GLOBAL TYPEDEFS AND ALIASES
 //************************************************************************
 
-typedef unsigned long Time;
+typedef unsigned long Time;     //used in Time calculations
+typedef long Count;				//used in motor encoding
 
 //************************************************************************
 //*                       GLOBAL CONSTANTS
