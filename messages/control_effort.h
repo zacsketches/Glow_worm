@@ -17,7 +17,7 @@ struct Control_effort_msg : public Message {
 	//      const char* name()
 	//      int id()
 	
-	int u;
+	long u;
     
     //minimal constructor
     Control_effort_msg() : Message("cont_eff"), 

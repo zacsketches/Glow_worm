@@ -80,7 +80,7 @@ public:
 	void run() {
 		//update the control effort
 		sub.update();
-		int effort = local_effort_msg.u;
+		long effort = local_effort_msg.u;
 		Direction::dir direction = (effort >= 0) ? Direction::fwd : Direction::bck;
 		effort = abs(effort);
 		effort = constrain(effort, 0, max_effort);

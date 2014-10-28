@@ -54,6 +54,11 @@ namespace QEM {
     const int qem[16] = {0,-1,1,2,1,0,2,-1,-1,2,0,1,2,1,-1,0};
 }
 
+namespace Board {
+	enum board{uno, due};
+}
+
+
 //************************************************************************
 //*                   PURE ABSTRACT ENCODER CLASS
 //* This class provides an interface to built vectors of templated
@@ -87,10 +92,12 @@ public:
 	   TODO use pre-processor commands to make the constructor
 	   flexible for Uno, Mega or Due use.
 	*/
-	Quadrature_encoder<A, B>(Position::position pos = Position::none) 
+	Quadrature_encoder<A, B>(Board::board b = Board::due,
+		Position::position pos = Position::none) 
 		: Encoder("Encoder"), p(pos) {};
 
-	Quadrature_encoder<A, B>(Position::position pos, const char* name) 
+	Quadrature_encoder<A, B>(Position::position pos, const char* name,
+		Board::board b = Board::due) 
 		: Encoder(name), p(pos) {};
 
 	// From Base class
@@ -133,6 +140,10 @@ public:
 	#endif
 	
 private:
+	int pin_A_digital;
+	int pin_B_digital;
+	Board::board b;
+	
 	Position::position p;	//Position::lt or Position::rt
 	static const int A_pin = A;
 	static const int B_pin = B;
@@ -163,12 +174,33 @@ inline
 void Quadrature_encoder<A, B>::begin()
 {
 	    //store the starting state for the two interrupt pins
-	    pinMode(A_pin, INPUT);
-	    pinMode(B_pin, INPUT);
+		if(b == Board::uno) {
+			if (A_pin == 0) {
+				pin_A_digital = 2;
+				pin_B_digital = 3;
+			} else {
+				pin_A_digital = 3;
+				pin_B_digital = 2;
+			}
+		}
+		if(b == Board::due) {
+			pin_A_digital = A_pin;
+			pin_B_digital = B_pin;
+		}
+		
+		/*
+			TODO: Add mega support
+		*/
+		
+	    pinMode(pin_A_digital, INPUT);
+	    pinMode(pin_B_digital, INPUT);
     
-	    Enc_A = digitalRead(A_pin);
-	    Enc_B = digitalRead(B_pin);
-    
+	    Enc_A = digitalRead(pin_A_digital);
+		//Serial.println(Enc_A);
+	    Enc_B = digitalRead(pin_B_digital);
+		//Serial.println(Enc_B);
+		//delay(2000);
+		
 	    //configure the interrupts
 		attachInterrupt(A_pin, &Quadrature_encoder<A,B>::delta_A, CHANGE);
 		attachInterrupt(B_pin, &Quadrature_encoder<A,B>::delta_B, CHANGE);

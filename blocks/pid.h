@@ -38,6 +38,9 @@ private:
 	double Kd;
 	Time last_update;
 	double epsilon_integrated;
+	double last_epsilon;
+	double Ti_inv;
+	double Td;
 	
   	//Publisher/Subscribers and local copies
 	gw::Subscriber<Error_msg> sub;
@@ -52,7 +55,15 @@ public:
 		sub(&error_msg, &ch, local_error_msg),
 		pub(&control_effort_msg, &ch, local_effort_msg),
 		Kp(kp), Ki(ki), Kd(kd)
-	{}
+	{
+			if(Kp != 0) {
+				Ti_inv = Ki/Kp;
+				Td = Kd/Kp;
+			} else {
+				Ti_inv = 0;
+				Td = 0;
+			}
+	}
 	
 	// From Base class
     //    char* name()
@@ -70,25 +81,43 @@ public:
 	void run() {
 		//update the local message
 		sub.update();
-        
+   		double epsilon = local_error_msg.epsilon;
+
 	    // Time management
 	    Time delta_time = local_error_msg.timestamp - last_update;
 		double dt = double(delta_time)/ timescale;
         
 		//integrate
-	    epsilon_integrated += local_error_msg.epsilon * dt;
+	    epsilon_integrated += epsilon * dt;
+		
+		//differentiate
+		double de_dt = (last_epsilon - epsilon) / dt;
         
 		//solve for adjustment
-	    double u = (Kp * local_error_msg.epsilon) + (Ki * epsilon_integrated);
+		//See http://en.wikipedia.org/wiki/PID_controller for a good
+		//discussion of the standard form of the PID equation as used
+		//in commercial controllers.
+		/*
+			u = Kp (epsilon + 1/Ti * integral[epsilong *dt] + Td * d/dt epsilon)
+			
+			Ti is integral time.  Ki = Kp / Ti
+			Td is derivative time. Kd = Kp*Td
+		*/
+
+	    //double u = Kp * (epsilon + (Ti_inv*epsilon_integrated) + (Td*de_dt));
+	    
+		//Parallel form
+		double u = Kp*epsilon + Ki*epsilon_integrated + Kd*de_dt;
         
 		//update local msg
-		local_effort_msg.u = (int)u;
+		local_effort_msg.u = (long)u;
 		
 		//publish the message
 		pub.publish();
 		
 		//get ready for the next loop
 		last_update = local_error_msg.timestamp;
+		last_epsilon = epsilon;
 	}
 	
 	#if INCLUDE_PID_PRINT == 1
