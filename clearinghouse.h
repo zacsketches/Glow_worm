@@ -135,30 +135,8 @@ namespace Port {
 }
 
 namespace Bump_state {
-    // Used in controller to set a bool value when the robot bumps into 
-    // something and is maneuvering to get clear again.
-	enum bs {clear, lt_bump, rt_bump};
-		
-	inline const char* text(bs s) {
-        const char* res;
-    
-        const char res0[4] = "clr";
-        const char res1[4] = "l_b";
-        const char res2[4] = "r_b";
-            
-        switch(s) {
-            case clear:
-                res = res0; 
-                break;
-            case lt_bump:
-                res = res1;
-                break;
-            case rt_bump:
-                res = res2;    
-                break;
-        }
-        return res;
-    }
+	//Used to return a value from a bumper
+	enum bump_state { clear = 0, pressed = 1};
 }
 
 namespace Danger_close_state {
@@ -425,6 +403,44 @@ struct Motor_state {
 	    }
 	#endif
 
+};
+//*******************************************************************
+//*                         Bumper
+//* Represents a physical bumper on the robot that grounds a digital
+//* pin when the bumper makes contact with an object.
+//*******************************************************************
+
+class Bumper {
+private: 
+	char* n;		//name
+	int bp;			//bumper pin
+	Position::position p;
+	bool test;		//in test mode or not
+
+	int one_in_x;
+	
+public:
+	Bumper(const int bumper_pin, Position::position pos, bool test_mode = false )
+	    : n("bumper"), bp(bumper_pin), p(pos),
+	    test(test_mode),
+		one_in_x(100)   //default to 1% chance in test mode
+		{ pinMode(bp, INPUT_PULLUP); }
+	
+	Bump_state::bump_state status() {
+		if(test) {
+			int odds = random (0, one_in_x);
+			return (odds == 1) ? Bump_state::pressed : Bump_state::clear; 
+		} else {
+			//recall that the pin grounds when pressed
+			byte res = digitalRead(bp);
+			return (res == HIGH) ? Bump_state::clear : Bump_state::pressed;
+		}
+	}	
+	//Test mode probability
+	int probability() const {return one_in_x;}
+	void set_probability(const int k) {one_in_x = k;}
+	//read position
+	Position::position pos() const {return p;}
 };
 
 //*******************************************************************
