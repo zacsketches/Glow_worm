@@ -55,7 +55,7 @@ public:
         motors.push_back(m);
     }
     
-    void drive() {
+    void run() {
 		sub.update();
         motors[0]->set_state(local_msg.l_dir, local_msg.l_spd);
         motors[1]->set_state(local_msg.r_dir, local_msg.r_spd);		

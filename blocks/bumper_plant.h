@@ -14,7 +14,7 @@
 //gw components
 
 //debug control
-#define INCLUDE_BUMPER_PRINT 0
+#define INCLUDE_BUMPER_PRINT 1
 
 /* 
 *  BUMPER_PLANT_H implements the simplest bumper system within my 
@@ -69,11 +69,12 @@ public:
     void attach(gw::Bumper* b) {
         if(b->pos() == Position::lt) {
 			bumpers[0] = b;
+			Serial.println("attached the left bumper");
 		}
 		if(b->pos() == Position::rt) {
 			bumpers[1] = b;
+			Serial.println("attached the right bumper");
 		}
-		
     }
     
 	void run() {

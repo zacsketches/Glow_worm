@@ -5,7 +5,7 @@
 #include <Vector.h>
 #include <Pair.h>
 
-#define DEBUG_DRIVE       1
+#define DEBUG_DRIVE       0
 #define DEBUG_MOTOR_STATE 0
 #define DEBUG_SUBSCRIBER  0
 #define DEBUG_PUBLISH     0
@@ -439,8 +439,20 @@ public:
 	//Test mode probability
 	int probability() const {return one_in_x;}
 	void set_probability(const int k) {one_in_x = k;}
+	
 	//read position
 	Position::position pos() const {return p;}
+	//get name
+	char* name() const { return n; }
+	
+	
+	void print() {
+	   Serial.print(F("{name:"));
+	   Serial.print(name());
+	   Serial.print(F(", pin:"));
+	   Serial.print(bp);
+	   Serial.println("}");
+   }
 };
 
 //*******************************************************************

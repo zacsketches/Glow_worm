@@ -64,16 +64,16 @@ struct Two_bumper_msg : public Message {
     
     //minimal constructor
     Two_bumper_msg() : Message("2_bumper"), 
-		pressed1(Bump_state::clear),
-		pressed2(Bump_state::clear),
+		pressed_lt(Bump_state::clear),
+		pressed_rt(Bump_state::clear),
 		bumped("bumped"), clear("clear")
 		{}
 		
 	//REQUIRED VIRTUAL VOID FROM BASE
 	void update(Message* msg) {
 		Two_bumper_msg* ptr = static_cast<Two_bumper_msg*>(msg);
-		pressed1 = ptr->pressed1;
-		pressed2 = ptr->pressed2;
+		pressed_lt = ptr->pressed_lt;
+		pressed_rt = ptr->pressed_rt;
 	}
 	
 	const char* text(Bump_state::bump_state val) {
@@ -87,10 +87,10 @@ struct Two_bumper_msg : public Message {
 		Serial.print(id());
 		Serial.print(F(", name: "));
 		Serial.print(name());
-		Serial.print(F(", val1: "));
-		Serial.print(text(pressed1));
-		Serial.print(F(", val2: "));
-		Serial.print(text(pressed2));
+		Serial.print(F(", lt: "));
+		Serial.print(text(pressed_lt));
+		Serial.print(F(", rt: "));
+		Serial.print(text(pressed_rt));
         Serial.println(F("}"));
 	}
 	#endif

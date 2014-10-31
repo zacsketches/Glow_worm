@@ -17,7 +17,7 @@ struct Cmd_velocity_msg : public Message {
 	// Data available from base class
 	//      const char* name()
 	//      int id()
-	
+	char* tag;
 	Direction::dir l_dir;
 	int l_spd;
 	Direction::dir r_dir;
@@ -25,7 +25,8 @@ struct Cmd_velocity_msg : public Message {
     
     //minimal constructor
     Cmd_velocity_msg() : Message("Cmd_velocity"),
-		l_dir(Direction::fwd), l_spd(0), r_dir(Direction::fwd), r_spd(0) 
+		l_dir(Direction::fwd), l_spd(0), r_dir(Direction::fwd), r_spd(0),
+		tag(" ")
 	{}
 	
 	//data and default name constructor
@@ -34,39 +35,45 @@ struct Cmd_velocity_msg : public Message {
 	    Direction::dir rt_dir,
 	    int rt_spd) 
 	    : Message("Cmd_velocity"), l_dir(lt_dir), l_spd(lt_spd),
-	    r_dir(rt_dir), r_spd(rt_spd)
+	    r_dir(rt_dir), r_spd(rt_spd), tag(" ")
 	{}
 
 	//full constructor
-	Cmd_velocity_msg( const char* name,
+	Cmd_velocity_msg( char* vec_tag,
 		Direction::dir lt_dir,
 	    int lt_spd,
 	    Direction::dir rt_dir,
 	    int rt_spd) 
-	    : Message(name), l_dir(lt_dir), l_spd(lt_spd),
+	    : Message("Cmd_Velocity"), tag(vec_tag), l_dir(lt_dir), l_spd(lt_spd),
 	    r_dir(rt_dir), r_spd(rt_spd)
 	{}
     
 	void update(Message* msg) {
 		Cmd_velocity_msg* ptr = static_cast<Cmd_velocity_msg*>(msg);
+		tag = ptr->tag;
         l_dir = ptr->l_dir;
         l_spd = ptr->l_spd;
         r_dir = ptr->r_dir;
         r_spd = ptr->r_spd;		
 	}
+	
+	void update(const Message* msg) {
+		Message* non_const_msg = const_cast<Message*>(msg);
+		update(non_const_msg);
+	}
 
    #if INCLUDE_PRINT == 1
     void print() {
-        char buf[80];
-        sprintf(buf, "{id: %d, name: %s, l_dir: %s, l_spd: %d, r_dir: %s, r_spd: %d}",
-            id(), name(), Direction::text(l_dir), l_spd, Direction::text(r_dir), r_spd);
+        char buf[100];
+        sprintf(buf, "{id:%d, name:%s, tag:%s, L_dir:%s, L_spd:%d, R_dir:%s, R_spd:%d}",
+            id(), name(), tag, Direction::text(l_dir), l_spd, Direction::text(r_dir), r_spd);
         Serial.println(buf);
     }
     
     const void print() const {
-        char buf[80];
-        sprintf(buf, "{id: %d, name: %s, l_dir: %s, l_spd: %d, r_dir: %s, r_spd: %d}",
-            id(), name(), Direction::text(l_dir), l_spd, Direction::text(r_dir), r_spd);
+        char buf[100];
+        sprintf(buf, "{id:%d, name:%s, tag:%s, L_dir:%s, L_spd:%d, R_dir:%s, R_spd:%d}",
+            id(), name(), tag, Direction::text(l_dir), l_spd, Direction::text(r_dir), r_spd);
         Serial.println(buf);
     }
 	#endif
