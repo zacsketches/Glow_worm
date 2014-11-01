@@ -1,5 +1,3 @@
-// Generateed by /Volumes/User_data/mybin/genstubs Version 1.1
-
 #include "clearinghouse.h"
 
 using namespace gw;

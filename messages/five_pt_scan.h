@@ -44,18 +44,21 @@ struct Five_pt_scan_msg : public Message {
 	#if INCLUDE_PRINT == 1
 	//print
 	void print() {
-	    char buf[80];
-	    sprintf(buf, "{id: %d, name: %s, (deg:cm) %s, ", id(), name(), text(p4));
-	    strcat(buf, text(p2));
-		strcat(buf, ", ");
-	    strcat(buf, text(p0));
-		strcat(buf, ", ");
-	    strcat(buf, text(p1));
-		strcat(buf, ", ");
-	    strcat(buf, text(p3));
-		strcat(buf, "}");
-		
-		Serial.println(buf);
+		Serial.print(F("{id:"));
+		Serial.print(id());
+        Serial.print(F(",name:"));
+		Serial.print(name());
+		Serial.print(",data:[");
+		Serial.print(text(p4));
+		Serial.print(",");
+		Serial.print(text(p2));
+		Serial.print(",");
+		Serial.print(text(p0));
+		Serial.print(",");
+		Serial.print(text(p1));
+		Serial.print(",");
+		Serial.print(text(p3));
+		Serial.println("]}");
 	}
 	#endif
 

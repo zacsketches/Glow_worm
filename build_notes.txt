@@ -1,0 +1,19 @@
+Build_notes.txt
+  - This is collection of notes on architecture issues and compilation
+    requirements to get the Glow Worm framework to function in the 
+    Arduino build system.
+
+1.  Blocks extend the gw::Node class and are the primary building blocks
+    for autonomous systems under the Glow Worm Framework.  Most blocks
+    are a header only file that fully inlines the functionality of the 
+    block.
+
+2.  More advanced blocks like scanner.h require a .cpp file to implement
+    their functionality.  Unfortunately, the Arduino build system won't
+    find the .cpp file in the blocks subdirectory.  Therefore the 
+    .cpp files are located in the top level Glow_worm library folder.
+    Although this clutters the main library folder it is required for the
+    linker to find the function definitions.  The error messages associated
+    with this linker failure look something like the following:
+         .cpp.o: In function 'loop':
+	 undefined reference to 'Scanner_5pt::run()'

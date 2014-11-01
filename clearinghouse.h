@@ -380,36 +380,6 @@ private:
 	MSG& nodes_msg;
 };
 
-
-//*******************************************************************
-//*                         Motor_state
-//*******************************************************************
-
-struct Motor_state {
-    Direction::dir d;
-    int pwm;  
-    
-    Motor_state(Direction::dir direction = Direction::fwd, int speed = 0 )
-        :d(direction), pwm(speed) {}
-
-    void update(const Direction::dir direction, const int speed) {
-        d = direction;
-        pwm = speed;
-    }
-
-	void update(const Motor_state& ms){
-		d = ms.d;
-		pwm = ms.pwm;
-	}
-	#if DEBUG_MOTOR_STATE == 1
-	    void print() {
-	        char buf[20];
-			sprintf(buf, "\tdir: %i\tspd: %i", d, pwm);
-	        Serial.println(buf);
-	    }
-	#endif
-
-};
 //*******************************************************************
 //*                         Bumper
 //* Represents a physical bumper on the robot that grounds a digital
@@ -467,6 +437,35 @@ public:
 	   Serial.print(bp);
 	   Serial.println("}");
    }
+};
+
+//*******************************************************************
+//*                         Motor_state
+//*******************************************************************
+struct Motor_state {
+    Direction::dir d;
+    int pwm;  
+    
+    Motor_state(Direction::dir direction = Direction::fwd, int speed = 0 )
+        :d(direction), pwm(speed) {}
+
+    void update(const Direction::dir direction, const int speed) {
+        d = direction;
+        pwm = speed;
+    }
+
+	void update(const Motor_state& ms){
+		d = ms.d;
+		pwm = ms.pwm;
+	}
+	#if DEBUG_MOTOR_STATE == 1
+	    void print() {
+	        char buf[20];
+			sprintf(buf, "\tdir: %i\tspd: %i", d, pwm);
+	        Serial.println(buf);
+	    }
+	#endif
+
 };
 
 //*******************************************************************
@@ -718,9 +717,11 @@ inline bool operator!=(const Scan_pt& a, const Scan_pt& b ){
 }
 
 inline const char* text(const Scan_pt& sp) {
+	const char* end = NULL;
 	char buf[10];
-	sprintf(buf, "%03d:%03d", sp.first(), sp.second() );
-	return buf;
+	sprintf(buf, "%03d:%03d", (int)sp.heading(), (int)sp.range() );
+	Serial.print(buf);
+	return end;
 }
 
 //Define an error point to check for return values of Scan points out of range
