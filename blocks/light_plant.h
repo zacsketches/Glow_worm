@@ -11,7 +11,7 @@
 #include <Pair.h>
 
 //gw messages
-#include <messages/sensor_state.h>
+#include <messages/cmd_led.h>
 
 //gw components
 

@@ -19,7 +19,7 @@
 #include <Servo.h>
 
 //debug control
-#define INCLUDE_SCANNER_PRINT 1
+#define INCLUDE_SCANNER_PRINT 0
 #define INCLUDE_SCAN_PRINT    0 //turn on to use scan.ino in utilities
 #define DEBUG_FIND_DELAY      0
 #define DEBUG_RUN             0
