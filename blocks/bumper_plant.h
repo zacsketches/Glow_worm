@@ -69,11 +69,9 @@ public:
     void attach(gw::Bumper* b) {
         if(b->pos() == Position::lt) {
 			bumpers[0] = b;
-			Serial.println("attached the left bumper");
 		}
 		if(b->pos() == Position::rt) {
 			bumpers[1] = b;
-			Serial.println("attached the right bumper");
 		}
     }
     

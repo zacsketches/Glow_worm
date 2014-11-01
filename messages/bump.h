@@ -83,13 +83,13 @@ struct Two_bumper_msg : public Message {
 	#if INCLUDE_PRINT == 1
 	//print
 	void print() {
-		Serial.print(F("{id: "));
+		Serial.print(F("{id:"));
 		Serial.print(id());
-		Serial.print(F(", name: "));
+		Serial.print(F(", name:"));
 		Serial.print(name());
-		Serial.print(F(", lt: "));
+		Serial.print(F(", lt:"));
 		Serial.print(text(pressed_lt));
-		Serial.print(F(", rt: "));
+		Serial.print(F(", rt:"));
 		Serial.print(text(pressed_rt));
         Serial.println(F("}"));
 	}

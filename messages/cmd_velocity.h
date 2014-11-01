@@ -24,7 +24,7 @@ struct Cmd_velocity_msg : public Message {
 	int r_spd;
     
     //minimal constructor
-    Cmd_velocity_msg() : Message("Cmd_velocity"),
+    Cmd_velocity_msg() : Message("cmd_velocity"),
 		l_dir(Direction::fwd), l_spd(0), r_dir(Direction::fwd), r_spd(0),
 		tag(" ")
 	{}
@@ -34,7 +34,7 @@ struct Cmd_velocity_msg : public Message {
 	    int lt_spd,
 	    Direction::dir rt_dir,
 	    int rt_spd) 
-	    : Message("Cmd_velocity"), l_dir(lt_dir), l_spd(lt_spd),
+	    : Message("cmd_velocity"), l_dir(lt_dir), l_spd(lt_spd),
 	    r_dir(rt_dir), r_spd(rt_spd), tag(" ")
 	{}
 
@@ -44,7 +44,7 @@ struct Cmd_velocity_msg : public Message {
 	    int lt_spd,
 	    Direction::dir rt_dir,
 	    int rt_spd) 
-	    : Message("Cmd_Velocity"), tag(vec_tag), l_dir(lt_dir), l_spd(lt_spd),
+	    : Message("cmd_Velocity"), tag(vec_tag), l_dir(lt_dir), l_spd(lt_spd),
 	    r_dir(rt_dir), r_spd(rt_spd)
 	{}
     
