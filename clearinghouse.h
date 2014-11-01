@@ -77,8 +77,14 @@ typedef long Count;				//used in motor encoding
 namespace gw {
 
 // I2C interface control variable. 
-// Only call Wire.begin() from gw components if this is false.
-// When you call Wire.begin() then set 'gw::wire_begun = true;'
+// Always check the status of this variable BEFORE calling Wire.begin().
+// Code in the .begin() method of your Glow Worm blocks that require I2C
+// should look something like this:
+//		if(!gw::wire_begun) {
+//			Wire.begin();
+//			gw::wire_begun = true;
+//		}
+
 static bool wire_begun = false;
 
 }
@@ -101,11 +107,11 @@ namespace Position {
 	enum position{lt, rt, none};
 }
 
-namespace State {
+namespace Led_state {
 	//Used to define LED state
-    enum state{off = 0, on = 1};
+    enum led_state{off = 0, on = 1};
 	
-    inline const char* text(state s) {
+    inline const char* text(led_state s) {
       const char* res[4] = {(s == off) ? "off" : "on "};
       return res[0];
     }
@@ -420,8 +426,16 @@ private:
 	int one_in_x;
 	
 public:
+	//default name
 	Bumper(const int bumper_pin, Position::position pos, bool test_mode = false )
 	    : n("bumper"), bp(bumper_pin), p(pos),
+	    test(test_mode),
+		one_in_x(100)   //default to 1% chance in test mode
+		{ pinMode(bp, INPUT_PULLUP); }
+	
+	//named bumper
+	Bumper(char* name, const int bumper_pin, Position::position pos, bool test_mode = false )
+	    : n(name), bp(bumper_pin), p(pos),
 	    test(test_mode),
 		one_in_x(100)   //default to 1% chance in test mode
 		{ pinMode(bp, INPUT_PULLUP); }
@@ -619,18 +633,18 @@ public:
 //*******************************************************************
 //*                         LED
 //* Led class allows me to declare an LED attached to the Arduino
-//* as an actuator that can you can push_back into a vector.
+//* as an object that can you can push_back into a vector.
 //*******************************************************************
 
 class Led {
     const char* n;      //name
     int p;              //pin the LED is attached to
-    State::state st;    //state of the LED either 'off' or 'on'
+    Led_state::led_state st;    //state of the LED either 'off' or 'on'
 	bool i2c;
     
 public:
     //Constructor for LED's attached directly to I/O pins
-	Led(const char* name, int pin, State::state s = State::off) 
+	Led(const char* name, int pin, Led_state::led_state s = Led_state::off) 
         :n(name), p(pin), st(s)
     {
         pinMode(p, OUTPUT);
@@ -638,7 +652,7 @@ public:
     }
 	
 	//Constructor for LED's attached via an I2C expander
-	Led(const char* name, Port::port pt, State::state s = State::off)
+	Led(const char* name, Port::port pt, Led_state::led_state s = Led_state::off)
 		:n(name), p(pt), st(s)
 	{
 		i2c = true;
@@ -652,23 +666,25 @@ public:
 		else return Port::error;
 	}
     
-    State::state state() { return st; }
-    void set_state( State::state cmd_state) { st = cmd_state; }
+    Led_state::led_state state() { return st; }
+    void set_state( Led_state::led_state cmd_state) { st = cmd_state; }
 
 	void print() {
 		if(i2c) 
 			Serial.print(F("I2C "));
 		Serial.print(F("Led"));
 		if(i2c) {
-			Serial.print(F(" connected on port: 0x"));
+			Serial.print(F(" connected on port:0x"));
 			Serial.print(port(), HEX);
 		}
 		else {
-			Serial.print(F(" connected on pin: "));
+			Serial.print(F(" connected on pin:"));
 			Serial.print(pin());			
 		}
-		Serial.print(F(" state: "));
-		Serial.println(text(state()));
+		Serial.print(F(" state:"));
+		Serial.print(text(state()));
+		Serial.print(F(" name:"));
+		Serial.println(name());
 	}
 };
 
