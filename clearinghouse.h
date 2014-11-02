@@ -87,6 +87,11 @@ namespace gw {
 
 static bool wire_begun = false;
 
+//Uncomment to keep track of ALL messages created.  Then static_cast the
+//void* back into Message* in the main sketch.  Commented out because
+//it takes up a lot of memory.
+//static Vector<void*> full_msg_list;
+
 }
 //************************************************************************
 //*                         Global Namespace enums
@@ -156,9 +161,34 @@ namespace Danger_close_state {
     }
 }
 
+
 //Namespace Glow Worm
 namespace gw {
+
+//forward declaration
+class Message;
+
+//************************************************************************
+//*                         CLEARINGHOUSE
+//************************************************************************
+class Clearinghouse {
+public:
+	Clearinghouse();
+	
+	void register_msg(Message* msg);
+	
+	void list();
+	
+	void update(Message* msg);
+	
+	Message* get_ptr(const char* name);
+	
+	Message* get_ptr(const int msg_id);
 		
+private:
+	Vector<Message*> store;
+};
+
 //************************************************************************
 //*                         MESSAGE
 //************************************************************************
@@ -169,29 +199,30 @@ struct Message {
 	 * messages, but will settle on a strategy as I begin to figure
 	 * out the rest of the interface.
 	 *  
-	*/   
+	*/
 	static int msg_count;
 	int msg_id;
-
     const char* n;        //name
     
     Message(const char* name) :n(name) {
-    	msg_count++;
-		msg_id = msg_count;
-    }
+		//Uncomment to keep track of ALL messages created.
+		//gw::full_msg_list.push_back(this);
+
+		msg_count++;
+		msg_id = msg_count;	
+	}
     const char* name() const {return n;}
 	const int id() const {return msg_id;}
     
     virtual void print() {
 		Serial.print(id());
-		Serial.print("\t");
+		Serial.print(F("\t"));
 		Serial.println(name());
     };
 	
 	// Updates the message from data in the passed message
 	virtual void update(Message* msg) = 0;    
 };
-
 
 //************************************************************************
 //*                         NODE
@@ -210,9 +241,9 @@ public:
     
     virtual void print() {
 		Serial.print(id());
-		Serial.print("\t");
+		Serial.print(F("\t"));
 		Serial.print(name());
-		Serial.println("\tCustom print not implemented for this node");
+		Serial.println(F("\tCustom print not implemented for this node"));
     };
 	
 	virtual void begin() = 0;
@@ -220,33 +251,6 @@ public:
 private:
 	int node_id;
 	const char* n; 
-};
-
-//************************************************************************
-//*                         CLEARINGHOUSE
-//************************************************************************
-/*
-	TODO should clearinghouse keep track of how many nodes are in the 
- *       systm and what they are?
-*/
-class Clearinghouse {
-
-public:
-	Clearinghouse();
-	
-	void register_msg(Message* msg);
-	
-	void list();
-	
-	void update(Message* msg);
-	
-	Message* get_ptr(const char* name);
-	
-	Message* get_ptr(const int msg_id);
-		
-private:
-	Vector<Message*> store;
-
 };
 
 //************************************************************************
@@ -810,13 +814,13 @@ template <typename T>
 inline
 void vector_print(const vector<T>& a) 
 {
-	Serial.print("{x:");
+	Serial.print(F("{x:"));
 	Serial.print(a.x,4);
-	Serial.print(", y:");
+	Serial.print(F(", y:"));
 	Serial.print(a.y,4);
-	Serial.print(", z:");
+	Serial.print(F(", z:"));
 	Serial.print(a.z,4);
-	Serial.println("}");
+	Serial.println(F("}"));
 }
 
 template <typename Ta, typename Tb, typename To> 
@@ -842,11 +846,11 @@ void vector_normalize(vector<int>* a) {
 	temp.y = (float)a->y;
 	temp.z = (float)a->z;
 	
-	Serial.print("before normalizing temp is: ");
+	Serial.print(F("before normalizing temp is: "));
 	vector_print(temp);	
 	vector_normalize(&temp);
 	
-	Serial.print("AFTER normalizing temp is: ");
+	Serial.print(F("AFTER normalizing temp is: "));
 	vector_print(temp);	
 	
 	a->x = (int)temp.x;

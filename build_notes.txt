@@ -17,3 +17,10 @@ Build_notes.txt
     with this linker failure look something like the following:
          .cpp.o: In function 'loop':
 	 undefined reference to 'Scanner_5pt::run()'
+	 
+3.	The use of const Cmd_velocity_msg's as control vectors results
+	in the compiler creating a temporary instance of the Message class
+	then discarding the temporary after it stores the constant Message
+	into flash memory.  This is what I think explains the higher than
+	expected counts of messages when ch.list() is run on bots like
+	whisker_bot.
