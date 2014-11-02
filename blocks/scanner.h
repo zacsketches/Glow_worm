@@ -85,6 +85,7 @@ class Scan
     Vector<gw::Scan_pt*> scan_pts;
     int sz;                         //number of Scan_points in the scan
     int spn;                        //span of the scan in degrees
+	static const int clear_distance = 300;	//value to initialize the scan
 
 public:  
 
@@ -259,7 +260,7 @@ inline Scan::Scan(const int scan_points, const int span, const int center)
     int multiple = 0;
     for(int i = 0; i <sz; ++i) {
         head = center + (dir * multiple * angular_seperation); 
-        scan_pts.push_back(new gw::Scan_pt(head, 0));      
+        scan_pts.push_back(new gw::Scan_pt(head, clear_distance));      
         if(i==0) ++multiple;
         if(i>0 && (i%2==0)) ++multiple;
         dir = -1 * dir; 
