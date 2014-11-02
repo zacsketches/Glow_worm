@@ -151,8 +151,8 @@ namespace Bump_state {
 }
 
 namespace Danger_close_state {
-    // Used in controller to set a bool value when the robot bumps into 
-    // something and is maneuvering to get clear again.
+    // Used in controller to set a bool value when the robot is 
+	// within the danger close threshold and needs to react immediately
 	enum dc {clear, danger_close};
 	
 	inline const char* const text(dc d) {

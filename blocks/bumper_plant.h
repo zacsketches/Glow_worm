@@ -14,7 +14,7 @@
 //gw components
 
 //debug control
-#define INCLUDE_BUMPER_PRINT 1
+#define INCLUDE_BUMPER_PRINT 0
 
 /* 
 *  BUMPER_PLANT_H implements the simplest bumper system within my 

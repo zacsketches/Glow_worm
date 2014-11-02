@@ -18,6 +18,9 @@
 //other 3rd party libraries
 #include <Wire.h>
 
+//debug control
+#define INCLUDE_LIGHT_PRINT 0
+
 //*******************************************************************
 //*                         LIGHT_PLANT
 //* Plant configured to drive five LEDs based off the Cmd_led_msg
@@ -162,24 +165,24 @@ public:
 		Wire.write(port_1);
 		Wire.endTransmission();	
 	}
-	
-	void print()
-	{
-		Serial.print(F("Node id: "));
-		Serial.print(id());
-		Serial.print("\t");
-		Serial.print(name());   
-		Serial.print("\t");
-		Serial.print(leds.size());
-		Serial.print(F(" leds attached: \n"));
-		for(int i = 0; i < leds.size(); ++i) {
-			Serial.print(F("\t"));
-			leds[i]->print();
+	#if INCLUDE_LIGHT_PRINT == 1	
+		void print()
+		{
+			Serial.print(F("Node id: "));
+			Serial.print(id());
+			Serial.print("\t");
+			Serial.print(name());   
+			Serial.print("\t");
+			Serial.print(leds.size());
+			Serial.print(F(" leds attached: \n"));
+			for(int i = 0; i < leds.size(); ++i) {
+				Serial.print(F("\t"));
+				leds[i]->print();
+			}
+			Serial.print(F("\tSubscribed to: "));
+			sub.subscribed_where();
 		}
-		Serial.print(F("\tSubscribed to: "));
-		sub.subscribed_where();
-	}
-
+	#endif
 };
 
 #endif

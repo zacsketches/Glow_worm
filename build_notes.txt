@@ -24,3 +24,18 @@ Build_notes.txt
 	into flash memory.  This is what I think explains the higher than
 	expected counts of messages when ch.list() is run on bots like
 	whisker_bot.
+	
+4.	Sbl_bot is stuck because there seems to be too few free bytes of 
+	memory.  I've trimmed all the fat I can find in my own code, and now
+	I'm tyring to trim Wire.h.  I created a repo on the DAZL lab machine
+	in the Arduino program directory.  In this repo I've created a branch
+	that changes the wire buffer length from 32 to 16 bytes.  Hoping
+	this helps without breaking wire.
+	
+	Before the Wire change the sbl_bot.ino sketch took 20,374 : 1688.
+	After it took 20,374 : 1608
+
+5.	After reducing the size of the buffer in HardwareSerial.h the build
+	numbers are:
+		Before - 20790 : 1626
+		After  - 20782 : 1562
