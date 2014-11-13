@@ -1,5 +1,5 @@
-#ifndef RPM_H
-#define RPM_H OCT_2014
+#ifndef cmd_pos_h
+#define cmd_pos_h
 
 #include <arduino.h>
 #include <clearinghouse.h>
@@ -7,27 +7,33 @@
 #define INCLUDE_PRINT 1
 
 //************************************************************************
-//*                         RPM MESSAGE
+//*                     COMMAND POSITION MESSAGE
+//* The difference between this message and the similarly named
+//* pos_msg is that this one is intended as the reference input to
+//* a control loop, whereas pos.h is intended as the feedback message
+//* from a loop.
 //************************************************************************
 
 using namespace gw;
 
-struct Rpm_msg : public Message {
+struct Cmd_pos_msg : public Message {
 	// Data available from base class
 	//      const char* name()
 	//      int id()
 	
-	double omega;
+	double distance_x;
+	double distance_y;
 	Time timestamp;
     
     //minimal constructor
-    Rpm_msg() : Message("rpm"), 
-		omega(0), timestamp(0) {}
+    Cmd_pos_msg() : Message("cmd_pos"), 
+		distance_x(0), distance_y(0), timestamp(0) {}
 	
 	//REQUIRED VIRTUAL VOID FROM BASE
 	void update(Message* msg) {
-		Rpm_msg* ptr = static_cast<Rpm_msg*>(msg);
-		omega = ptr->omega;
+		Cmd_pos_msg* ptr = static_cast<Cmd_pos_msg*>(msg);
+		distance_x = ptr->distance_x;
+		distance_y = ptr->distance_y;
 		timestamp = ptr->timestamp;
 	}
 		
@@ -40,12 +46,13 @@ struct Rpm_msg : public Message {
 		Serial.print(name());
 		Serial.print(F(",stamp:"));
 		Serial.print(timestamp);
-		Serial.print(F(",omega:"));
-		Serial.print(omega);
+		Serial.print(F(",distance_x:"));
+		Serial.print(distance_x);
+		Serial.print(F(",distance_y:"));
+		Serial.print(distance_y);
         Serial.println(F("}"));
 	}
 	#endif
-		
 };
 
 #endif
