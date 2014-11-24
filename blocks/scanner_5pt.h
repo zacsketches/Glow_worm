@@ -1,5 +1,5 @@
 #ifndef SCANNER_5PT_H
-#define SCANNER_5PT_H SEP_2014
+#define SCANNER_5PT_H NOV_2014
 
 #include <arduino.h>  
 
@@ -47,8 +47,12 @@ extern Five_pt_scan_msg five_pt_scan_msg;
    speed of .2sec/60deg.  or 200ms/60deg.  I default a little high to make sure the
    servo has plenty of time.
    
-   Set bool test_mode to true in the constructor to generate random range data
-   in the set [0, 360] and publish this data to the clearinghouse.
+   In November of 2014 I adapted this class to include a scan simulator so that 
+   I could 'run' the scanner without attaching it to the servo and hardware.  The
+   simulator generates random obstructions and simulates that Alfred has a velocity
+   of 1 cm per program loop.  When the take_reading() method is called the 
+   simulator returns the range to the closest obstruction in the sector as opposed
+   to pingining the actual ultrasonic sensor.
       
    The signature for creating a scanner is:
    Scanner(const int servo_pin, 
@@ -149,6 +153,32 @@ public:
 };
 
 
+//Scan_order object handles the order in which the scanner moves between Scan_points
+struct Scan_order{
+	int* order;
+	int pos;
+	int sz;
+	
+	Scan_order(int test_points);   //test_points is the number of unique points in the scan
+                                      //the scanner will come back to the middle after every
+                                      //other measurement like the examples below for a 7 and 5 point scan
+                                      //where 0 is the middle
+                                      //      0 1 0 2 0 3 0 4 0 5 0 6
+                                      //      0 1 0 2 0 3 0 4
+	~Scan_order() { delete[] order; } 
+
+	Scan_order& operator++() {    //prefix ++
+		++pos;
+		if (pos == sz) pos = 0;
+		return *this;
+	}
+	
+    void restart() { pos = 0; }
+	
+    const int size() const {return sz;}
+	const int current() const {return order[pos]; }
+}; 
+
 //*******************************************************************
 //*                         SCANNER CLASS
 //* The Scanner class brings the data structures above together into 
@@ -161,34 +191,9 @@ class Scanner_5pt : public gw::Node {
 private:
 
 	//Scan object handles data for the scanner
-	Scan  scan;    
-
-	//Scan_order object handles the order in which the scanner moves between Scan_points
-	struct Scan_order{
-		int* order;
-		int pos;
-		int sz;
-		
-		Scan_order(int test_points);   //test_points is the number of unique points in the scan
-	                                      //the scanner will come back to the middle after every
-	                                      //other measurement like the examples below for a 7 and 5 point scan
-	                                      //where 0 is the middle
-	                                      //      0 1 0 2 0 3 0 4 0 5 0 6
-	                                      //      0 1 0 2 0 3 0 4
-		~Scan_order() { delete[] order; } 
-
-		Scan_order& operator++() {    //prefix ++
-			++pos;
-			if (pos == sz) pos = 0;
-			return *this;
-		}
-		
-        void restart() { pos = 0; }
-		
-        const int size() const {return sz;}
-		const int current() const {return order[pos]; }
-    }; 
-
+	Scan  scan;
+	//Scan order object keeps track of the order in which each 
+	//heading is scanned.
 	Scan_order scan_order;
     
 	//Publisher and local copy of the message
@@ -232,14 +237,6 @@ public:
     
 	void begin();
 	void run();
-	
-	//A passed vector is filled data representing each scan point
-    //This method allows other classes to get the heading info
-    //used by the scanner....HOWEVER, the preferred method is to
-    //get the headings out of the Five_pt_scan_msg that is published
-    //
-    //NOTE - this function is untested!
-    void heading_vec(Vector<int>& dest) const;
 	
 	#if INCLUDE_SCANNER_PRINT == 1
         void print();
