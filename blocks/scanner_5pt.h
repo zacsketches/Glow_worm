@@ -89,7 +89,6 @@ extern Five_pt_scan_msg five_pt_scan_msg;
 //* quadrant ahead of the robot with the center point of the scan
 //* parallel to the boresight of the robot centerline.
 //*******************************************************************
-
 class Scan 
 {
 
@@ -152,9 +151,13 @@ public:
     }    
 };
 
-
-//Scan_order object handles the order in which the scanner moves between Scan_points
-struct Scan_order{
+//************************************************************************
+//*                         SCAN_ORDER
+//* Scan_order object handles the order in which the scanner moves 
+//* between Scan_points
+//************************************************************************
+struct Scan_order
+{
 	int* order;
 	int pos;
 	int sz;
@@ -179,6 +182,26 @@ struct Scan_order{
 	const int current() const {return order[pos]; }
 }; 
 
+//************************************************************************
+//*                         SCAN_SIM
+//* Scan_sim provides an object to simulate a random progression of 
+//* obstructions and responds to the take_reading method by providing
+//* the range to the closest obstruction in the scan wedge. 
+//* 
+//* I've also written a processing utility that visualized the scan 
+//* scan simulator.
+//*
+//* The simulator uses barycentric coordinates to determine whether an
+//* obstruction is within the scan wedge.  See more about the math 
+//* behind barycentric coordinates here:
+//*    http://totologic.blogspot.fr/2014/01/accurate-point-in-triangle-test.html
+//*    http://en.wikipedia.org/wiki/Barycentric_coordinate_system
+//************************************************************************
+class Scan_sim{
+
+};
+
+
 //*******************************************************************
 //*                         SCANNER CLASS
 //* The Scanner class brings the data structures above together into 
@@ -195,6 +218,11 @@ private:
 	//Scan order object keeps track of the order in which each 
 	//heading is scanned.
 	Scan_order scan_order;
+	
+	//We use a pointer to hold the location of the Scan_sim so that
+	//it can be set to a Null pointer when using real hardware and 
+	//thus takes no memory resources.
+	Scan_sim* scan_sim;
     
 	//Publisher and local copy of the message
 	gw::Publisher<Five_pt_scan_msg> pub;
