@@ -39,8 +39,12 @@
    speed of .2sec/60deg.  or 200ms/60deg.  I default a little high to make sure the
    servo has plenty of time to move.
    
-   Set bool test_mode to true in the constructor to generate random range data
-   in the set [0, 360] and publish this data to the clearinghouse.
+   In November of 2014 I adapted this class to include a scan simulator so that 
+   I could 'run' the scanner without attaching it to the servo and hardware.  The
+   simulator generates random obstructions and simulates that Alfred has a velocity
+   of 1 cm per program loop.  When the take_reading() method is called the 
+   simulator returns the range to the closest obstruction in the sector as opposed
+   to pingining the actual ultrasonic sensor.
       
    The signature for creating a scanner is:
    Scanner(const int servo_pin, 
@@ -48,7 +52,7 @@
            const int center = 90,
            const int span = 170,
            const int servo_angular_rate = 240/60+5,
-           bool  test_mode = false); 
+           bool  simulate = false); 
            
     The five point scanner publishes to the Five_pt_scan_msg.
 
@@ -78,7 +82,6 @@
 //* quadrant ahead of the robot with the center point of the scan
 //* parallel to the boresight of the robot centerline.
 //*******************************************************************
-
 class Scan 
 {
 
@@ -93,7 +96,7 @@ public:
 
     ~Scan() {}
 
-  // NON-MODIFYING METHODS //
+    // NON-MODIFYING METHODS //
     int size() const { return sz; }
     int span() const { return spn; }
     
@@ -107,14 +110,17 @@ public:
         return res;
     }
     
+    //load the Vector passed by reference with the scan points
+	void load_scan_pts(Vector<gw::Scan_pt>& pts_vec) const;
+	
     //caller must check -1 for out of bounds
     const int heading_by_index(const int index) const;    
     const int range_by_index  (const int index) const;    
 
-  // MODIFYING METHODS //            
+    // MODIFYING METHODS //            
     //returns true on successful update
-     bool update_by_heading(const int heading, const int data);  
-    
+    bool update_by_heading(const int heading, const int data);  
+	
     #if INCLUDE_SCAN_PRINT == 1
 		void print_headings() {
 			Serial.print(F("{Scan headings: "));
@@ -140,6 +146,209 @@ public:
 	#endif
 };
 
+//************************************************************************
+//*                         SCAN_ORDER
+//* Scan_order object handles the order in which the scanner moves 
+//* between Scan_points
+//************************************************************************
+struct Scan_order{
+	int* order;
+	int pos;
+	int sz;
+	
+	/* The argument test_points in the constructor is the number of unique 
+	   points in the scan.  The scanner will come back to the middle after 
+	   every measurement like the examples below for a 7 and 5 test_point 
+	   scanners where 0 is the middle:
+			0 1 0 2 0 3 0 4 0 5 0 6
+			0 1 0 2 0 3 0 4
+	*/
+	Scan_order(int test_points);
+	~Scan_order() { delete[] order; } 
+
+	Scan_order& operator++() {    //prefix ++
+		++pos;
+		if (pos == sz) pos = 0;
+		return *this;
+	}
+	
+    void restart() { pos = 0; }
+	
+    const int size() const {return sz;}
+	const int current() const {return order[pos]; }
+};
+
+//************************************************************************
+//*                         SCAN_SIM
+//* Scan_sim provides an object to simulate a random progression of 
+//* obstructions and responds to the take_reading method by providing
+//* the range to the closest obstruction in the scan wedge. 
+//* 
+//* I've also written a processing utility that visualized the scan 
+//* scan simulator.
+//*
+//* The simulator uses barycentric coordinates to determine whether an
+//* obstruction is within the scan wedge.  See more about the math 
+//* behind barycentric coordinates here:
+//*    http://totologic.blogspot.fr/2014/01/accurate-point-in-triangle-test.html
+//*    http://en.wikipedia.org/wiki/Barycentric_coordinate_system
+//************************************************************************
+class Scan_sim{
+private:
+	//Sim obstructions are generated at a random x location and then progress
+	//toward the bot at velocity.  The scan wedges represent the area 
+	//covered by each ping of the ultrsonic sensor.  The Scan_sim updates the
+	//position of each obstruction on every loop, but interacts with the
+	//normal scanner when the range is requested at a particular heading.
+	
+	//max_x is the largest x_value that an obstruction can be generated at
+	const static int max_x = 750;
+	//center represents the bot location in the middle of the sim field
+	const static double x_center = 375;
+	const static double y_center = 375;
+	//pulse_angle is angular spread of the ultrasonic pulse.  The heading
+	//represents the bisecting angle of the pulse_angle
+	const static int pulse_angle = 40;
+	//the clear range is the value returned by the ultrasonic sensor when the
+	//wedge is clear
+	const static int clear_range = 360;
+	//the probability that an obstruction will be generated on each loop
+	int one_in_x;
+		
+	struct Wedge_point {
+		double x, y;
+		Wedge_point(){x=0; y=0;}
+		Wedge_point(double _x, double _y) {x=_x; y=_y;}
+		//Wedge_point(const double& _x, const double& _y) {x=_x; y=_y;}
+	};
+	struct Sim_obs {
+		double x, y;
+		double v = 1;
+	
+		Sim_obs(){
+			y = 0;
+			x = random(0, max_x);
+		}
+		void set_velocity(int velocity) { v=velocity; }
+		void update(){
+			y += v;
+		}
+	};
+	struct Scan_wedge {
+		const static int half_width = pulse_angle/2;
+	
+		int heading;
+		Wedge_point p, q, r;
+	
+		//set each update if the wedge contains an obstruction
+		boolean obstructed = false;
+		int obs_range;
+	
+		Scan_wedge(int _heading) : heading(_heading) 
+		{
+			double upper = PI * (heading + half_width) / 180;
+			double lower = PI * (heading - half_width) / 180;
+		
+			p = Wedge_point(x_center, y_center);
+			q = Wedge_point(x_center+cos(upper)*clear_range, y_center-sin(upper)*clear_range);
+			r = Wedge_point(x_center+cos(lower)*clear_range, y_center-sin(lower)*clear_range);
+		}
+	
+		void clear_obstructed() {
+			obstructed = false;
+			obs_range = clear_range;
+		}
+	
+		int range() { return obs_range; }
+	
+		//***********************************************************************
+		//                    CALCULATE BARYCENTRIC CONTAINMENT
+		//
+		//  Barycentric coordinates allow expression of the coordinates of any point
+		//  as a linear combination of a triangle's vertices.  The physical association
+		//  is that you can balance a triangle on any point within its boundary or
+		//  along an edge with three scalar weights at the vertices defined as
+		//  a, b, and c such that:
+		//      x = a * x1 + b * x2  + c * x3
+		//      y = a * y1 + b * y2 + c * y3
+		//      a + b + c = 1
+		//
+		//  Solving these equations for a, b and c yields:
+		//     a = ((y2-y3)*(x-x3) + (x3-x2)*(y-y3)) / ((y2-y3)*(x1-x3) + (x3-x2)*(y1-y3))
+		//     b = ((y3-y1)*(x-x3) + (x1-x3)*(y-y3)) / ((y2-y3)*(x1-x3) + (x3-x2)*(y1-y3))
+		//     c = 1 - a - b
+		//
+		//  For any balance point along an edge or within the boundary of the triangle
+		//  the scalars will be equal to zero or positive numbers.  If a point is 
+		//  outside the triangle you would have to apply negative weight, or pull up
+		//  on one point of the triangle to get it to balance.  So to find out if a 
+		//  point is inside the triangle we apply the property:
+		//    K inside T if and only if 0<=a<=1 and 0<=b<=1 and 0<=c<=1
+		//***********************************************************************
+		void set_obstructed(Sim_obs obs) {
+		    double den = (q.y-r.y)*(p.x-r.x) + (r.x-q.x)*(p.y-r.y);
+		    double a = ((q.y-r.y)*(obs.x-r.x) + (r.x-q.x)*(obs.y-r.y)) / den;
+		    double b = ((r.y-p.y)*(obs.x-r.x) + (p.x-r.x)*(obs.y-r.y)) / den;
+		    double c = 1 - a - b;
+  
+		    boolean obs_in_wedge =  0<=a && a<=1 && 0<=b && b<=1 && 0<=c && c<=1;
+			if(!obstructed) {
+				obstructed = obs_in_wedge ? true : false;
+			}
+			if(obstructed) {
+				double range_to_obs = dist(x_center,y_center,obs.x,obs.y);
+				obs_range = int(min(range_to_obs, obs_range));
+			}
+		}
+		
+		double dist(double x1, double y1, double x2, double y2) {
+			//pythagorean distance
+			double a = x1-x2;
+			double b = y1-y2;
+			return sqrt(a*a + b*b);
+		}	
+	};
+	
+	Vector<Scan_wedge*> wedges;
+	Vector<Sim_obs*> obs;
+	Vector<gw::Scan_pt> headings;
+
+public:	
+	Scan_sim(Scan& scan, int prob=250)
+		: one_in_x(prob)
+	{
+		scan.load_scan_pts(headings);
+		for(int i = 0; i < headings.size(); ++i) {
+			wedges.push_back(new Scan_wedge(headings[i].heading() ) );
+		}
+	}
+	
+	void run() {
+		//determine whether to spawn a new obstruction
+		int dice = random(0,one_in_x);
+		if (dice == 1) {
+			obs.add(new Sim_obs());
+		}
+				
+		// update the obstructions then remove any obstruction that 
+		// has passed the center point
+		for (int i =obs.size()-1; i>=0; --i) {
+		  Sim_obs tmp = obs.[i];
+		  tmp.update();
+		  if (tmp.y > y_center) {
+		    obs.remove(i);
+		  } else {
+  			for (int j=0; j<wedges.size(); ++j) {
+  				// for each wedge pass in the tmp_obs and set the obstructed
+  				// variable if the obs is inside the wedge.
+  				Scan_wedge tmp_wedge = wedges.get(j);
+  				tmp_wedge.set_obstructed(tmp);
+  			}
+		  }
+		}	
+	}
+	
+};
 
 //*******************************************************************
 //*                         SCANNER CLASS
@@ -159,30 +368,12 @@ private:
 	Scan  scan;    
 
 	//Scan_order object handles the order in which the scanner moves between Scan_points
-	struct Scan_order{
-		int* order;
-		int pos;
-		int sz;
-		
-		Scan_order(int test_points);   //test_points is the number of unique points in the scan
-	                                      //the scanner will come back to the middle after every
-	                                      //other measurement like the examples below for a 7 and 5 point scan
-	                                      //where 0 is the middle
-	                                      //      0 1 0 2 0 3 0 4 0 5 0 6
-	                                      //      0 1 0 2 0 3 0 4
-		~Scan_order() { delete[] order; } 
-
-		Scan_order& operator++() {    //prefix ++
-			++pos;
-			if (pos == sz) pos = 0;
-			return *this;
-		}
-		
-        void restart() { pos = 0; }
-		
-        const int size() const {return sz;}
-		const int current() const {return order[pos]; }
-    } scan_order; 
+	Scan_order scan_order; 
+	
+	//We use a pointer to hold the location of the Scan_sim so that
+	//it can be set to a Null pointer when using real hardware and 
+	//thus takes no memory resources.
+	Scan_sim* scan_sim;
 
 	//Publisher and local copy of the message
 	gw::Publisher<Five_pt_scan_msg> pub;
@@ -192,7 +383,6 @@ private:
 	int sp;                 //Arduino I/O pin where the servo signal is connected
 	int ctr;                //Center in degrees where the servo points directly ahead
 	int tp;                 //the number of test points used in the scan
-    bool test;              //use an actual scanner or generate random data
 	Servo servo;            //Servo object
 	int sar;                //servo_angular_rate the servo turns at
 	char servo_state;       // B0000 0001->servo ready 
@@ -202,6 +392,11 @@ private:
                            
 	//Ultrasonic Parallax PING))) sensor connected on pin pp
 	int pp;
+	
+	// If simulate == true then use a Scan_sim object rather than the 
+	// normal hardware
+    bool simulate;             
+	
   
 	//*** HELPER FUNCTIONS ***
     void publish_message();
@@ -217,7 +412,7 @@ public:
 		const int center = 90,
 		const int span = 170,
 		const int servo_angular_rate = (240/60+5),
-        const bool test = false);
+        const bool sim = false);
           
 	// From Base class
 	//    char* name()
@@ -303,13 +498,20 @@ inline bool Scan::update_by_heading(const int heading, const int data) {
         }
     }
     return success;
-
 }
+
+inline void Scan::load_scan_pts(Vector<gw::Scan_pt>& pts_vec) const{
+	//load the scan_pts into the passed Vector
+	for(int i = 0; i < scan_pts.size(); ++i) {
+		pts_vec.push_back(*scan_pts[i]);
+	}
+}
+
 
 //*******************************************************************
 //*                         SCAN ORDER CONSTRUCTOR
 //*******************************************************************
-inline Scanner_5pt::Scan_order::Scan_order(int test_points) {
+inline Scan_order::Scan_order(int test_points) {
     pos = 0;
     sz = 2* (test_points -1);
     order = new int[sz];
@@ -332,17 +534,23 @@ inline Scanner_5pt::Scanner_5pt( const int servo_pin,
                  const int center,
                  const int span,
                  const int servo_angular_rate,
-                 const bool test_data)
+                 const bool sim)
     : Node("Scanner_5pt"),
       sp(servo_pin), pp(ping_pin), ctr(center), tp(5), 
-      scan(5, span, center), sar(servo_angular_rate), test(test_data),
+      scan(5, span, center), sar(servo_angular_rate), simulate(sim),
       scan_order(5),
 	  pub(&five_pt_scan_msg, &ch, local_msg)
 {
 
     servo_state = 0x01;     // Ready
-    //running the Servo::attach(int) function for the servo from 
-    // the Scanner constructor yields undefined servo behavior.  
+
+	//Set the Scan_sim to a null pointer for a hardware enabled scanner
+	//or create a new Scan_sim if we need one
+	if(simulate) {
+		scan_sim = new Scan_sim(scan);
+	} else {
+		scan_sim = NULL;
+	}
 }
 
 //*********************************************************************************
@@ -512,12 +720,16 @@ inline void Scanner_5pt::take_reading(const int heading) {
     //the servo is already in the right position when this method is
     //called so we just need to bang the sonar, get the measurement
     //and then save it to the scan
-    long dur;
-    if(!test) dur = pulse();
-    else dur = random(0,20880);
-    
-    int cm = us_to_cm(dur);
-    
+	int cm = 0;
+	if(!simulate) {
+	    long pulse_duration = pulse();
+	    int cm = us_to_cm(pulse_duration);
+	} else {
+		/*
+			TODO implement the simulation that results in a reading 
+			for the cm value of the target heading.
+		*/
+	}
     scan.update_by_heading(heading, cm);
 }
 
