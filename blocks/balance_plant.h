@@ -15,7 +15,24 @@
 #include <messages/plant_status.h>
 
 //gw components
-#include <quadrature.h>
+#include <tools/quadrature.h>
+
+//Supporting definitions
+//MAX_EFFOR should be defined in the specific robot configuration file
+//you are using to build balance plant around, but in case this is an
+//example or the generic case I provide default definition here.  Just
+//for clarification, the robot definition file should include all the 
+//physical connections like motor connection pins, encoder connections,
+//and the max effort that you expect your control solution to spit 
+//out.  Then the balance plant will scale the max effort into the 
+//range [0-255].  Same is true for the conversion factor from sensed
+//current to Amps.
+#ifndef MAX_EFFORT
+	#define MAX_EFFORT 255
+#endif
+#ifndef CONV_I
+	#define CONV_I 1
+#endif
 
 //debug control
 #define INCLUDE_PLANT_PRINT 1
@@ -40,13 +57,6 @@ private:
         to deliver a maximum of two amps per channel.  I could test this for
         better accuracy.
      */
-     
-	// 2A / 1023 ADC resolution = .00196
-	static const double conv_I = 0.00196;
-	
-	// Max effort taken from model of controller in MATLAB simulation
-	// to disturbances.
-	static const int max_effort = 1000;
 	
 	//Vectors for supporting components
     Vector<Motor*> motors;
@@ -65,8 +75,8 @@ public:
 		sub(&control_effort_msg, &ch, local_effort_msg),
 		pub(&plant_status_msg, &ch, local_plant_msg)
 	{
-    	motors.reserve(2);      //allocate memory for the motors vector
-		encoders.reserve(2);
+    	//motors.reserve(2);      //allocate memory for the motors vector
+		//encoders.reserve(2);
 	}
 	
 	// From Base class
@@ -93,7 +103,7 @@ public:
 		int effort = local_effort_msg.u;
 		Direction::dir direction = (effort >= 0) ? Direction::fwd : Direction::bck;
 		effort = abs(effort);
-		effort = map(effort, 0,max_effort,0,255);
+		effort = map(effort, 0,MAX_EFFORT,0,255);
 		
 		//drive the plant
 		// char buf[50];
@@ -102,6 +112,9 @@ public:
 		for(int i = 0; i < motors.size(); ++i) {
 			motors[i]->drive(direction, effort);
 		}
+		
+		Serial.print("effort is: ");
+		Serial.println(effort);
 		
 		
 		//read the encoders 
@@ -117,11 +130,11 @@ public:
 		for(int i = 0; i < motors.size(); ++i) {
 			if(motors[i]->pos() == Position::lt){
 				int val = motors[i]->current();
-				local_plant_msg.lt_I = val * conv_I;
+				local_plant_msg.lt_I = val * CONV_I;
 			}
 			if(motors[i]->pos() == Position::rt){
 				int val = motors[i]->current();				
-				local_plant_msg.rt_I = val * conv_I;
+				local_plant_msg.rt_I = val * CONV_I;
 			}
 		}			
 		//update local_plant_msg
