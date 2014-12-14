@@ -113,10 +113,6 @@ public:
 			motors[i]->drive(direction, effort);
 		}
 		
-		Serial.print("effort is: ");
-		Serial.println(effort);
-		
-		
 		//read the encoders 
 		for(int i = 0; i < encoders.size(); ++i) {
 			if(encoders[i]->pos() == Position::lt){
