@@ -1,5 +1,5 @@
 #ifndef SCANNER_H
-#define SCANNER_H NOV_2014
+#define SCANNER_H JAN_2015
 
 #include <arduino.h>
 
@@ -39,8 +39,15 @@
    speed of .2sec/60deg.  or 200ms/60deg.  I default a little high to make sure the
    servo has plenty of time to move.
    
-   Set bool test_mode to true in the constructor to generate random range data
-   in the set [0, 360] and publish this data to the clearinghouse.
+   In January of 2015 I added a scan simulator that would allow me to run the 
+   control system without connecting it to the full robot.  The scan simulator 
+   takes the same parameters and simulates obstructions moving toward the 
+   robot at 1cm per sec.  IT DOES NOT RESPOND TO MOTION ORDERED BY THE ROBOT
+   CONTROLLER.  THE SIMULATOR ONLY PUBLISHES REASONABLE INPUT DATA TO THE 
+   'five_pt_scan.h' MESSAGE.
+   
+   To put the scanner in simulation mode set the test_mode to true in the 
+   constructor.
       
    The signature for creating a scanner is:
    Scanner(const int servo_pin, 
